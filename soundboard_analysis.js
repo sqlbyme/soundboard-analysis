@@ -114,9 +114,10 @@ print("Total artist tiles dismissed: " + addCommas(num_dismissed));
 
 //This is the Invitations stats
 var num_invites = db.user_actions.find( { action : 10, source : 10 } ).count();
-rint("Number of Invitations Sent: " + addCommas(num_invites));
+print("Number of Invitations Sent: " + addCommas(num_invites));
 */
 
+// Start Soundboard Top 100 listing
 print();
 print("******************************");
 
@@ -132,24 +133,4 @@ top100.forEach( function(cell) {
   print(top100i + ": " + cell.value.artist + " - " + cell.value.followed + " followers.");
   top100i ++;
 });
-
-/*
-var mapF = function () {
-      emit(db.tiles.find(this.tile_id)[0].artist_name, 1);
-    },
-    reduceF = function (key, values) {
-      var total = 0;
-      values.forEach(function (val) {
-        total += val;
-      });
-
-     return total;
-   },
-   rank = 1;
-
- db.user_tiles.mapReduce(mapF, reduceF, { query: { bucket: 1 },  out: "top_follow_results" });
- db.top_follow_results.find().sort({ value: -1 }).limit(100).forEach(function (f) {
-   print(rank++ + '. ' + f._id + ' (' + f.value +  ' follows)');
- });
- db.top_follow_results.drop();
-*/
+// End Soundboard Top 100 Listing
