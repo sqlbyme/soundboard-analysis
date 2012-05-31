@@ -64,7 +64,7 @@ collections_per_user = db.user_tiles.group(
       initial: { count: 0 }
     });
 
-total_tiles_collected = db.user_tiles.find({}).count();
+total_tiles_collected = db.user_tiles.find().count();
 
 
 var user_count = 0,
