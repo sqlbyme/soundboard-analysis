@@ -23,7 +23,7 @@
  * 3-21-12 - me - added the Change Log and documented the top of the doc.
  * 3-21-13 - me - added the function addCommas to the file.
  * 3-21-12 - me - added the output of the Number of Tiles Dismissed.
- *
+ * 5-31-12 - me - updated schema to remove "buckets" as they have been deprecated.
  */
 
 //Display Report Header
@@ -58,14 +58,13 @@ total_users = db.users.count();
 
 collections_per_user = db.user_tiles.group(
     { key: { user_id: true },
-      cond: { bucket: 1 },
       reduce: function(obj,out) {
                 out.count += 1;
               },
       initial: { count: 0 }
     });
 
-total_tiles_collected = db.user_tiles.find({ bucket: 1 }).count();
+total_tiles_collected = db.user_tiles.find({}).count();
 
 
 var user_count = 0,
@@ -93,29 +92,7 @@ print("Avg number of artists followed: " + addCommas((collection_count/user_coun
 print("******************************");
 
 
-/*
-// Reset user and collection counts prior to counting shares
-user_count = collection_count = 0;
-shares_per_user.forEach(printColl);
-print("Number of shares: " + addCommas(collection_count));
-print("Number of users who shared a tile: " + addCommas(user_count));
-print("Avg shares: " + addCommas((collection_count/user_count).toFixed(2)));
 
-//This is the Collection Action Stats Section
-tiles_from_friends = db.user_actions.find({action:1, source:1}).count();
-tiles_from_feed = db.user_actions.find({action:1, source:0}).count();
-tiles_from_search = db.user_actions.find({action:1, source:4}).count();
-num_dismissed = db.user_actions.find( { action : 2 } ).count();
-
-print("Total artists followed from Discover: " + addCommas(tiles_from_feed));
-print("Total artists followed from Search: " + addCommas(tiles_from_search));
-print("Total artists followed from Friends: " + addCommas(tiles_from_friends));
-print("Total artist tiles dismissed: " + addCommas(num_dismissed));
-
-//This is the Invitations stats
-var num_invites = db.user_actions.find( { action : 10, source : 10 } ).count();
-print("Number of Invitations Sent: " + addCommas(num_invites));
-*/
 
 // Start Soundboard Top 100 listing
 print();
