@@ -96,10 +96,10 @@ jsonOut.Data.push( { "Avg number of artists followed" : addCommas((collection_co
 var artistCount = db.artist_metadata.count();
 
 jsonOut.top100 = [];
-var top100 = db.artist_metadata.find({}, { _id: 0}).sort({ "value.followed": -1}).limit(100);
+var top100 = db.artists.find({}, { _id: 0}).sort({ tfc: -1}).limit(100);
 var top100i = 1;
 top100.forEach( function(cell) {
-  jsonOut.top100.push( { "Rank" : top100i, "Artist" : cell.value.artist, "Followers" : cell.value.followed } );
+  jsonOut.top100.push( { "Rank" : top100i, "Artist" : cell.artist_name, "Followers" : cell.tfc } );
   top100i ++;
 });
 

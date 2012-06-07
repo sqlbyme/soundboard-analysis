@@ -104,10 +104,10 @@ print("Soundboard Top 100 of " + addCommas(artistCount));
 print("Followed Artists");
 print();
 
-var top100 = db.artist_metadata.find({}, { _id: 0}).sort({ "value.followed": -1}).limit(100);
+var top100 = db.artists.find({}, { _id: 0}).sort({ tfc: -1 }).limit(100);
 var top100i = 1;
 top100.forEach( function(cell) {
-  print(top100i + ": " + cell.value.artist + " - " + cell.value.followed + " followers.");
+  print(top100i + ": " + cell.artist_name + " - " + cell.tfc + " followers.");
   top100i ++;
 });
 // End Soundboard Top 100 Listing
