@@ -98,7 +98,7 @@ print("******************************");
 print();
 print("******************************");
 
-var artistCount = db.artist_metadata.count();
+var artistCount = db.artists.count();
 
 print("Soundboard Top 100 of " + addCommas(artistCount));
 print("Followed Artists");
