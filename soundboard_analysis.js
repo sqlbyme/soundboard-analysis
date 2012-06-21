@@ -85,10 +85,55 @@ var shares_per_user = db.user_actions.group(
 
 collections_per_user.forEach(printColl);
 
+var year = new Date().getFullYear().toString();
+var yesterday = IsAM(new Date()) ? new Date().getDate()-1 : new Date().getDate();
+var month = new Date().getMonth()+1;
+
+function addLeadingZero(input) {
+  var outputString = "";
+  if (input.toString().length < 2)
+  {
+    outputString = "0" + input.toString();
+  }
+  else
+  {
+    outputString = input.toString();
+  }
+  
+  return outputString;
+}
+
+function setStartDate(year, month, day) {
+  var outDate = year + "-" + addLeadingZero(month) + "-" + addLeadingZero(day) + "T00:00:00-0800";
+  return outDate;
+}
+
+function setEndDate(year, month, day){
+  var outDate = year + "-" + addLeadingZero(month) + "-" + addLeadingZero(day) + "T23:59:59-0800";
+  return outDate;
+}
+
+var searchStart = setStartDate(year, month, yesterday);
+var searchEnd = setEndDate(year, month, yesterday);
+
+var resultsJSON = db.user_touchpoints.group(
+  {
+    key: { "touchpoints.0.touchpoint" :  true},
+    cond: { "touchpoints.0.created_at" : { $gte: ISODate(searchStart), $lt: ISODate(searchEnd) }},
+    initial: { count: 0 },
+    reduce: function(doc, prev) { prev.count +=1 }
+  });
+
+
 print("Total users: " + addCommas(total_users));
 print("Total artists followed: " + addCommas(total_tiles_collected));
 print("Number of users following an artist: " + addCommas(user_count));
 print("Avg number of artists followed: " + addCommas((collection_count/user_count).toFixed(2)));
+print("******************************");
+print("Touchpoints Count - if report is run before 12:00 counts are previous day.")
+print("Android Touchpoints: " + resultsJSON[0].count);
+print("Desktop Touchpoints: " + resultsJSON[2].count);
+print("Web Touchpoints: " + resultsJSON[1].count);
 print("******************************");
 
 
