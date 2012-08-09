@@ -29,8 +29,7 @@
 //Display Report Header
 
 // First we need to determine if it is before or after noon
-function IsAM(d)
-{
+function IsAM(d) {
    return (d.getHours() < 12 ? true : false);
 }
 
@@ -86,7 +85,7 @@ var shares_per_user = db.user_actions.group(
 collections_per_user.forEach(printColl);
 
 var year = new Date().getFullYear().toString();
-var yesterday = IsAM(new Date()) ? new Date().getDate()-1 : new Date().getDate();
+var yesterday = IsAM(new Date()) ? new Date().getDate()-1 : new Date().getDate()-4;
 var month = new Date().getMonth()+1;
 
 function addLeadingZero(input) {
@@ -123,7 +122,20 @@ var resultsJSON = db.user_touchpoints.group(
     initial: { count: 0 },
     reduce: function(doc, prev) { prev.count +=1 }
   });
+  
+function touchpointMap () {
+  emit ( this.touchpoints[0].touchpoint, this.touchpoints[0]._id );
+  
+}
 
+function touchpointReduce (key, values) {
+  var total = 0;
+  for ( var i=0; i<values.length; i++ )
+    total += values[i].count;
+  return { count : total };
+}
+
+var resultsJSON = db.user_touchpoints.mapReduce (touchpointMap, touchpointReduce, {out: { inline : 1}}, { query: { "touchpoints.0.created_at" : { $gte: ISODate(searchStart), $lt: ISODate(searchEnd) } } } );
 
 print("Total users: " + addCommas(total_users));
 print("Total artists followed: " + addCommas(total_tiles_collected));
