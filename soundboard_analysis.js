@@ -25,6 +25,7 @@
  * 3-21-12 - me - added the output of the Number of Tiles Dismissed.
  * 5-31-12 - me - updated schema to remove "buckets" as they have been deprecated.
  * 8-09-12 - me - had to change the user_touchpoint.group function to a map/reduce block due to a limit of 20,000 unique keys on the group function.
+ * 8-10-12 - me - had to change the collection_per_user.group function to a map/reduce block for same reason above.
  */
 
 //Display Report Header
@@ -40,8 +41,7 @@ print(new Date().toLocaleDateString() + " @ " + new Date().toLocaleTimeString())
 print("******************************");
 
 // This is the addCommas function
- function addCommas(nStr)
- {
+ function addCommas(nStr) {
 	nStr += '';
 	x = nStr.split('.');
 	x1 = x[0];
@@ -56,6 +56,7 @@ print("******************************");
 
 total_users = db.users.count();
 
+/* Commented Out as this is being deprecated.  This block should be removed in the near future.
 collections_per_user = db.user_tiles.group(
     { key: { user_id: true },
       reduce: function(obj,out) {
@@ -63,6 +64,24 @@ collections_per_user = db.user_tiles.group(
               },
       initial: { count: 0 }
     });
+*/
+
+function usertilesMap () {
+  
+  emit ( this.user_id, { count: 1 });
+  
+}
+
+function usertilesReduce (key, values) {
+  
+  var total = 0;
+  for ( var i=0; i<values.length; i++ )
+    total += values[i].count;
+  return { count : total };
+  
+}
+
+var collections_per_user = db.user_tiles.mapReduce (usertilesMap, usertilesReduce, {out: { inline : 1 } } );
 
 total_tiles_collected = db.user_tiles.find().count();
 
@@ -72,8 +91,9 @@ var user_count = 0,
 
 function printColl(coll) {
   user_count += 1;
-  collection_count += coll["count"];
+  collection_count += coll.value["count"];
 }
+
 var shares_per_user = db.user_actions.group(
     { key: { user_id: true },
       cond: { action: 0 },
@@ -83,7 +103,7 @@ var shares_per_user = db.user_actions.group(
       initial: { count: 0 }
     });
 
-collections_per_user.forEach(printColl);
+collections_per_user.results.forEach(printColl);
 
 var year = new Date().getFullYear().toString();
 var yesterday = IsAM(new Date()) ? new Date().getDate()-1 : new Date().getDate()-4;
