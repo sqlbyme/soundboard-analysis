@@ -24,6 +24,7 @@
  * 3-21-13 - me - added the function addCommas to the file.
  * 3-21-12 - me - added the output of the Number of Tiles Dismissed.
  * 5-31-12 - me - updated schema to remove "buckets" as they have been deprecated.
+ * 8-09-12 - me - had to change the user_touchpoint.group function to a map/reduce block due to a limit of 20,000 unique keys on the group function.
  */
 
 //Display Report Header
@@ -115,6 +116,7 @@ function setEndDate(year, month, day){
 var searchStart = setStartDate(year, month, yesterday);
 var searchEnd = setEndDate(year, month, yesterday);
 
+/* Commented Out as this is being deprecated.  This block should be removed in the near future.
 var resultsJSON = db.user_touchpoints.group(
   {
     key: { "touchpoints.0.touchpoint" :  true},
@@ -122,9 +124,10 @@ var resultsJSON = db.user_touchpoints.group(
     initial: { count: 0 },
     reduce: function(doc, prev) { prev.count +=1 }
   });
+*/ 
   
 function touchpointMap () {
-  emit ( this.touchpoints[0].touchpoint, this.touchpoints[0]._id );
+  emit ( this.touchpoints[0].touchpoint, { count: 1 });
   
 }
 
@@ -135,7 +138,7 @@ function touchpointReduce (key, values) {
   return { count : total };
 }
 
-var resultsJSON = db.user_touchpoints.mapReduce (touchpointMap, touchpointReduce, {out: { inline : 1}}, { query: { "touchpoints.0.created_at" : { $gte: ISODate(searchStart), $lt: ISODate(searchEnd) } } } );
+var resultsJSON = db.user_touchpoints.mapReduce (touchpointMap, touchpointReduce, {out: { inline : 1}, query: { "touchpoints.0.created_at" : { $gte: ISODate(searchStart), $lt: ISODate(searchEnd) } } } );
 
 print("Total users: " + addCommas(total_users));
 print("Total artists followed: " + addCommas(total_tiles_collected));
@@ -143,9 +146,9 @@ print("Number of users following an artist: " + addCommas(user_count));
 print("Avg number of artists followed: " + addCommas((collection_count/user_count).toFixed(2)));
 print("******************************");
 print("Touchpoints Count - if report is run before 12:00 counts are previous day.")
-print("Android Touchpoints: " + resultsJSON[0].count);
-print("Desktop Touchpoints: " + resultsJSON[2].count);
-print("Web Touchpoints: " + resultsJSON[1].count);
+print("Android Touchpoints: " + resultsJSON.results[0].value.count);
+print("Desktop Touchpoints: " + resultsJSON.results[2].value.count);
+print("Web Touchpoints: " + resultsJSON.results[1].value.count);
 print("******************************");
 
 
