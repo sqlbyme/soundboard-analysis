@@ -106,7 +106,7 @@ var shares_per_user = db.user_actions.group(
 collections_per_user.results.forEach(printColl);
 
 var year = new Date().getFullYear().toString();
-var yesterday = IsAM(new Date()) ? new Date().getDate()-1 : new Date().getDate()-4;
+var yesterday = IsAM(new Date()) ? new Date().getDate()-1 : new Date().getDate();
 var month = new Date().getMonth()+1;
 
 function addLeadingZero(input) {
