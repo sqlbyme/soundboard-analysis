@@ -167,8 +167,8 @@ print("Avg number of artists followed: " + addCommas((collection_count/user_coun
 print("******************************");
 print("Touchpoints Count - if report is run before 12:00 counts are previous day.")
 print("Android Touchpoints: " + resultsJSON.results[0].value.count);
-print("Desktop Touchpoints: " + resultsJSON.results[2].value.count);
-print("Web Touchpoints: " + resultsJSON.results[1].value.count);
+print("Desktop Touchpoints: " + resultsJSON.results[1].value.count);
+print("Web Touchpoints: " + resultsJSON.results[2].value.count);
 print("******************************");
 
 
