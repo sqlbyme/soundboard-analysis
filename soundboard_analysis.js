@@ -180,9 +180,9 @@ print("******************************");
 print();
 print("******************************");
 
-var artistCount = addCommas(total_tiles_collected);
+var artistCount = addCommas(db.artists.count());
 
-print("Soundboard Top 100 Connections!");
+print("Soundboard Top 100 Connections of " + artistCount + " Artists!");
 print();
 
 var top100 = db.artists.find({}, { _id: 0}).sort({ tfc: -1 }).limit(100);
