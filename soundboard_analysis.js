@@ -156,18 +156,21 @@ function touchpointReduce (key, values) {
   return { count : total };
 }
 
-total_users = db.users.find( { created_at: { $gte: ISODate(searchStart), $lt: ISODate(searchEnd) } } )count();
+new_users_today = db.users.find( { created_at: { $gte: ISODate(searchStart), $lte: ISODate(searchEnd) } } ).count();
+total_users = db.users.find( { created_at: { $lte: ISODate(searchEnd) } } ).count();
 var resultsJSON = db.user_touchpoints.mapReduce (touchpointMap, touchpointReduce, {out: { inline : 1}, query: { "touchpoints.0.created_at" : { $gte: ISODate(searchStart), $lt: ISODate(searchEnd) } } } );
-
-print("Total users: " + addCommas(total_users));
-print("Total artists followed: " + addCommas(total_tiles_collected));
-print("Number of users following an artist: " + addCommas(user_count));
-print("Avg number of artists followed: " + addCommas((collection_count/user_count).toFixed(2)));
+total_touchpoints = resultsJSON.results[0].value.count + resultsJSON.results[1].value.count + resultsJSON.results[2].value.count;
+print("Total Registered Users: " + addCommas(total_users));
+print("New Users: " + addCommas(new_users_today));
+print("Total Artist to Fan Connections: " + addCommas(total_tiles_collected));
+print("Number of Users Connecting to an Artist: " + addCommas(user_count));
+print("Avg Number of Artist Connections / User: " + addCommas((collection_count/user_count).toFixed(2)));
 print("******************************");
 print("Touchpoints Count - if report is run before 12:00 counts are previous day.")
 print("Android Touchpoints: " + resultsJSON.results[0].value.count);
 print("Desktop Touchpoints: " + resultsJSON.results[1].value.count);
 print("Web Touchpoints: " + resultsJSON.results[2].value.count);
+print("Total Touchpoints: " + addCommas(total_touchpoints));
 print("******************************");
 
 
@@ -177,16 +180,15 @@ print("******************************");
 print();
 print("******************************");
 
-var artistCount = db.artists.count();
+var artistCount = addCommas(total_tiles_collected);
 
-print("Soundboard Top 100 of " + addCommas(artistCount));
-print("Followed Artists");
+print("Soundboard Top 100 Connections!");
 print();
 
 var top100 = db.artists.find({}, { _id: 0}).sort({ tfc: -1 }).limit(100);
 var top100i = 1;
 top100.forEach( function(cell) {
-  print(top100i + ": " + cell.artist_name + " - " + cell.tfc + " followers.");
+  print(top100i + ": " + cell.artist_name + " - " + addCommas(cell.tfc) + " fan connections.");
   top100i ++;
 });
 // End Soundboard Top 100 Listing
