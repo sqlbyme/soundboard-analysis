@@ -54,8 +54,6 @@ print("******************************");
  };
 
 
-total_users = db.users.count();
-
 /* Commented Out as this is being deprecated.  This block should be removed in the near future.
 collections_per_user = db.user_tiles.group(
     { key: { user_id: true },
@@ -158,6 +156,7 @@ function touchpointReduce (key, values) {
   return { count : total };
 }
 
+total_users = db.users.find( { created_at: { $gte: ISODate(searchStart), $lt: ISODate(searchEnd) } } )count();
 var resultsJSON = db.user_touchpoints.mapReduce (touchpointMap, touchpointReduce, {out: { inline : 1}, query: { "touchpoints.0.created_at" : { $gte: ISODate(searchStart), $lt: ISODate(searchEnd) } } } );
 
 print("Total users: " + addCommas(total_users));
