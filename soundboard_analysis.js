@@ -103,10 +103,18 @@ var shares_per_user = db.user_actions.group(
 
 collections_per_user.results.forEach(printColl);
 
+
+// These vars set the current year and month and then set the date based upon 
+// whether or not it is before noon. Could probably remove the IsAM check
+// based on the fact that we no longer run the report twice a day.
 var year = new Date().getFullYear().toString();
 var yesterday = IsAM(new Date()) ? new Date().getDate()-1 : new Date().getDate();
 var month = new Date().getMonth()+1;
 
+
+// This function adds a leading zero to an int value
+// we use this to add a leading zero to the month or date vars because the ISODate()
+// function expects the month and date args to be two digit
 function addLeadingZero(input) {
   var outputString = "";
   if (input.toString().length < 2)
@@ -121,16 +129,20 @@ function addLeadingZero(input) {
   return outputString;
 }
 
+
+// This function sets a string value which will be used as an arg of an ISODate call later
 function setStartDate(year, month, day) {
   var outDate = year + "-" + addLeadingZero(month) + "-" + addLeadingZero(day) + "T00:00:00-0800";
   return outDate;
 }
 
+// Same as above
 function setEndDate(year, month, day){
   var outDate = year + "-" + addLeadingZero(month) + "-" + addLeadingZero(day) + "T23:59:59-0800";
   return outDate;
 }
 
+// Set the start and end dates to search between
 var searchStart = setStartDate(year, month, yesterday);
 var searchEnd = setEndDate(year, month, yesterday);
 
@@ -143,7 +155,8 @@ var resultsJSON = db.user_touchpoints.group(
     reduce: function(doc, prev) { prev.count +=1 }
   });
 */ 
-  
+
+// Setup the map / reduce for the Touchpoints
 function touchpointMap () {
   emit ( this.touchpoints[0].touchpoint, { count: 1 });
   
@@ -156,10 +169,28 @@ function touchpointReduce (key, values) {
   return { count : total };
 }
 
-new_users_today = db.users.find( { created_at: { $gte: ISODate(searchStart), $lte: ISODate(searchEnd) } } ).count();
-total_users = db.users.find( { created_at: { $lte: ISODate(searchEnd) } } ).count();
+
+// Setup the map / reduce for Likes
+function likesMap () {
+	emit ( this.like_count, { count: 1 });
+}
+
+function likesReduce (key, values) {
+  var total = 0;
+  for ( var i=0; i<values.length; i++ )
+    total += values[i].count;
+  return { count : total };
+}
+
+
+// Set the vars to prep them for output.
+var new_users_today = db.users.find( { created_at: { $gte: ISODate(searchStart), $lte: ISODate(searchEnd) } } ).count();
+var total_users = db.users.find( { created_at: { $lte: ISODate(searchEnd) } } ).count();
 var resultsJSON = db.user_touchpoints.mapReduce (touchpointMap, touchpointReduce, {out: { inline : 1}, query: { "touchpoints.0.created_at" : { $gte: ISODate(searchStart), $lt: ISODate(searchEnd) } } } );
-total_touchpoints = resultsJSON.results[0].value.count + resultsJSON.results[1].value.count + resultsJSON.results[2].value.count;
+var total_touchpoints = resultsJSON.results[0].value.count + resultsJSON.results[1].value.count + resultsJSON.results[2].value.count;
+var likesJSON = db.artist_updates.mapReduce( likesMap, likesReduce, { out: { inline: 1 }, query: { like_count: { $gte: 1 } } } );
+
+// Output results to the display or an email
 print("Total Registered Users: " + addCommas(total_users));
 print("New Users: " + addCommas(new_users_today));
 print("Total Artist to Fan Connections: " + addCommas(total_tiles_collected));
