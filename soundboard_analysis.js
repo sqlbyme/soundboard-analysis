@@ -172,16 +172,21 @@ function touchpointReduce (key, values) {
 
 // Setup the map / reduce for Likes
 function likesMap () {
-	emit ( this.like_count, { count: 1 });
+	emit ( this.artist_id, { count: this.like_count });
 }
 
 function likesReduce (key, values) {
   var total = 0;
   for ( var i=0; i<values.length; i++ )
     total += values[i].count;
-  return { count : total };
+  return { count: total };
+  
 }
 
+function getName(aid) {
+  var retName = db.artists.findOne( { _id: ObjectId(aid) } );
+  return retName.artist_name;
+}
 
 // Set the vars to prep them for output.
 var new_users_today = db.users.find( { created_at: { $gte: ISODate(searchStart), $lte: ISODate(searchEnd) } } ).count();
@@ -189,6 +194,8 @@ var total_users = db.users.find( { created_at: { $lte: ISODate(searchEnd) } } ).
 var resultsJSON = db.user_touchpoints.mapReduce (touchpointMap, touchpointReduce, {out: { inline : 1}, query: { "touchpoints.0.created_at" : { $gte: ISODate(searchStart), $lt: ISODate(searchEnd) } } } );
 var total_touchpoints = resultsJSON.results[0].value.count + resultsJSON.results[1].value.count + resultsJSON.results[2].value.count;
 var likesJSON = db.artist_updates.mapReduce( likesMap, likesReduce, { out: { inline: 1 }, query: { like_count: { $gte: 1 } } } );
+var likesCounter = 0;
+likesJSON.results.forEach( function(cell) { likesCounter += cell.value.count; });
 
 // Output results to the display or an email
 print("Total Registered Users: " + addCommas(total_users));
@@ -196,6 +203,7 @@ print("New Users: " + addCommas(new_users_today));
 print("Total Artist to Fan Connections: " + addCommas(total_tiles_collected));
 print("Number of Users Connecting to an Artist: " + addCommas(user_count));
 print("Avg Number of Artist Connections / User: " + addCommas((collection_count/user_count).toFixed(2)));
+print("Total Likes: " + addCommas(likesCounter));
 print("******************************");
 print("Touchpoints Count - if report is run before 12:00 counts are previous day.")
 print("Android Touchpoints: " + resultsJSON.results[0].value.count);
@@ -216,10 +224,15 @@ var artistCount = addCommas(db.artists.count());
 print("Soundboard Top 100 Connections of " + artistCount + " Artists!");
 print();
 
-var top100 = db.artists.find({}, { _id: 0}).sort({ tfc: -1 }).limit(100);
+function getLikes(aid) {
+  var retLikes = db.artist_updates.mapReduce( likesMap, likesReduce, { out: { inline: 1 }, query: { artist_id: ObjectId(aid) } } );
+  return retLikes.results[0].value.count;
+}
+
+var top100 = db.artists.find().sort({ tfc: -1 }).limit(100);
 var top100i = 1;
 top100.forEach( function(cell) {
-  print(top100i + ": " + cell.artist_name + " - " + addCommas(cell.tfc) + " fan connections.");
+  print(top100i + ": " + cell.artist_name + " - " + addCommas(cell.tfc) + " fan connections - " + addCommas(getLikes(cell._id)) + " likes.");
   top100i ++;
 });
 // End Soundboard Top 100 Listing
