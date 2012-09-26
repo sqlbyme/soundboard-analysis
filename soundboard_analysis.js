@@ -26,6 +26,7 @@
  * 5-31-12 - me - updated schema to remove "buckets" as they have been deprecated.
  * 8-09-12 - me - had to change the user_touchpoint.group function to a map/reduce block due to a limit of 20,000 unique keys on the group function.
  * 8-10-12 - me - had to change the collection_per_user.group function to a map/reduce block for same reason above.
+ * 9-26-12 - me - added ugc map/reduce total and per artist counts.
  */
 
 //Display Report Header
@@ -146,15 +147,6 @@ function setEndDate(year, month, day){
 var searchStart = setStartDate(year, month, yesterday);
 var searchEnd = setEndDate(year, month, yesterday);
 
-/* Commented Out as this is being deprecated.  This block should be removed in the near future.
-var resultsJSON = db.user_touchpoints.group(
-  {
-    key: { "touchpoints.0.touchpoint" :  true},
-    cond: { "touchpoints.0.created_at" : { $gte: ISODate(searchStart), $lt: ISODate(searchEnd) }},
-    initial: { count: 0 },
-    reduce: function(doc, prev) { prev.count +=1 }
-  });
-*/ 
 
 // Setup the map / reduce for the Touchpoints
 function touchpointMap () {
@@ -183,6 +175,18 @@ function likesReduce (key, values) {
   
 }
 
+// Setup the map / reduce for UGC
+function ugcMap () {
+  emit (this.user_id, { count: 1 });
+}
+
+function ugcReduce (key, values) {
+  var total = 0;
+  for ( var i=0; i<values.length; i++ )
+    total += values[i].count;
+  return { count: total };  
+}
+
 function getName(aid) {
   var retName = db.artists.findOne( { _id: ObjectId(aid) } );
   return retName.artist_name;
@@ -191,11 +195,22 @@ function getName(aid) {
 // Set the vars to prep them for output.
 var new_users_today = db.users.find( { created_at: { $gte: ISODate(searchStart), $lte: ISODate(searchEnd) } } ).count();
 var total_users = db.users.find( { created_at: { $lte: ISODate(searchEnd) } } ).count();
+
 var resultsJSON = db.user_touchpoints.mapReduce (touchpointMap, touchpointReduce, {out: { inline : 1}, query: { "touchpoints.0.created_at" : { $gte: ISODate(searchStart), $lt: ISODate(searchEnd) } } } );
-var total_touchpoints = resultsJSON.results[0].value.count + resultsJSON.results[1].value.count + resultsJSON.results[2].value.count;
+var androidTouch = resultsJSON.results[0] ? resultsJSON.results[0].value.count : 0;
+var desktopTouch = resultsJSON.results[1] ? resultsJSON.results[1].value.count : 0;
+var iOSTouch = resultsJSON.results[3] ? resultsJSON.results[3].value.count: 0;
+var webTouch = resultsJSON.results[2] ? resultsJSON.results[2].value.count : 0;
+var total_touchpoints = androidTouch + desktopTouch + iOSTouch + webTouch;
+
 var likesJSON = db.artist_updates.mapReduce( likesMap, likesReduce, { out: { inline: 1 }, query: { like_count: { $gte: 1 } } } );
 var likesCounter = 0;
-likesJSON.results.forEach( function(cell) { likesCounter += cell.value.count; });
+  likesJSON.results.forEach( function(cell) { likesCounter += cell.value.count; });
+
+var ugcJSON = db.artist_updates.mapReduce( ugcMap, ugcReduce, { out: { inline: 1}, query: { user_id: { $exists: true } } } );
+var ugcCounter = 0;
+  ugcJSON.results.forEach( function(cell) { ugcCounter += cell.value.count; });
+
 
 // Output results to the display or an email
 print("Total Registered Users: " + addCommas(total_users));
@@ -205,11 +220,15 @@ print("Number of Users Connecting to an Artist: " + addCommas(user_count));
 print("Avg Number of Artist Connections / User: " + addCommas((collection_count/user_count).toFixed(2)));
 print("Total Likes: " + addCommas(likesCounter));
 print("******************************");
-print("Touchpoints Count - if report is run before 12:00 counts are previous day.")
-print("Android Touchpoints: " + resultsJSON.results[0].value.count);
-print("Desktop Touchpoints: " + resultsJSON.results[1].value.count);
-print("Web Touchpoints: " + resultsJSON.results[2].value.count);
+print("Touchpoints Count - if report is run before 12:00 counts are previous day.");
+print("Android Touchpoints: " + addCommas(androidTouch));
+print("Desktop Touchpoints: " + addCommas(desktopTouch));
+print("iOS Touchpoints: " + addCommas(iOSTouch));
+print("Web Touchpoints: " + addCommas(webTouch));
 print("Total Touchpoints: " + addCommas(total_touchpoints));
+print("******************************");
+print("UGC Count");
+print("Total UGC Items: " + addCommas(ugcCounter));
 print("******************************");
 
 
@@ -226,13 +245,18 @@ print();
 
 function getLikes(aid) {
   var retLikes = db.artist_updates.mapReduce( likesMap, likesReduce, { out: { inline: 1 }, query: { artist_id: ObjectId(aid) } } );
-  return retLikes.results[0].value.count;
+  return retLikes.results[0] ? retLikes.results[0].value.count: 0;
+}
+
+function getUGCCount(aid) {
+  var retUGCCount = db.artist_updates.mapReduce( ugcMap, ugcReduce, { out: { inline: 1 }, query: { user_id: { $exists: true }, artist_id: ObjectId(aid) } } );
+  return retUGCCount.results[0] ? retUGCCount.results[0].value.count: 0;
 }
 
 var top100 = db.artists.find().sort({ tfc: -1 }).limit(100);
 var top100i = 1;
 top100.forEach( function(cell) {
-  print(top100i + ": " + cell.artist_name + " - " + addCommas(cell.tfc) + " fan connections - " + addCommas(getLikes(cell._id)) + " likes.");
+  print(top100i + ": " + cell.artist_name + " - " + addCommas(cell.tfc) + " fan connections - " + addCommas(getLikes(cell._id)) + " like(s) - " + addCommas(getUGCCount(cell._id)) + " ugc item(s).");
   top100i ++;
 });
 // End Soundboard Top 100 Listing
