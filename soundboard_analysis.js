@@ -36,12 +36,13 @@ function IsAM(d) {
    return (d.getHours() < 12 ? true : false);
 }
 
+// Output the report header
 print("******************************");
 IsAM(new Date()) ? print("Soundboard Morning Stats" ) : print("Soundboard Afternoon Stats");
 print(new Date().toLocaleDateString() + " @ " + new Date().toLocaleTimeString());
 print("******************************");
 
-// This is the addCommas function
+// This is the addCommas function - we use this function to make numbers larger than 1000 prettier to display.
  function addCommas(nStr) {
 	nStr += '';
 	x = nStr.split('.');
@@ -55,16 +56,7 @@ print("******************************");
  };
 
 
-/* Commented Out as this is being deprecated.  This block should be removed in the near future.
-collections_per_user = db.user_tiles.group(
-    { key: { user_id: true },
-      reduce: function(obj,out) {
-                out.count += 1;
-              },
-      initial: { count: 0 }
-    });
-*/
-
+// Begin user follow map /reduce function def
 function usertilesMap () {
   
   emit ( this.user_id, { count: 1 });
@@ -79,6 +71,7 @@ function usertilesReduce (key, values) {
   return { count : total };
   
 }
+// End function def
 
 var collections_per_user = db.user_tiles.mapReduce (usertilesMap, usertilesReduce, {out: { inline : 1 } } );
 
@@ -93,6 +86,7 @@ function printColl(coll) {
   collection_count += coll.value["count"];
 }
 
+// Caclculate the number of shares per user 
 var shares_per_user = db.user_actions.group(
     { key: { user_id: true },
       cond: { action: 0 },
@@ -186,16 +180,23 @@ function ugcReduce (key, values) {
     total += values[i].count;
   return { count: total };  
 }
+// End function def
 
+// Function to get the Artist name given a particular artist id.
 function getName(aid) {
   var retName = db.artists.findOne( { _id: ObjectId(aid) } );
   return retName.artist_name;
 }
 
 // Set the vars to prep them for output.
-var new_users_today = db.users.find( { created_at: { $gte: ISODate(searchStart), $lte: ISODate(searchEnd) } } ).count();
+// Artist Count
+var artistCount = db.artists.find( { disabled: { $ne: true } } ).count();
+var diasbledArtistCount = db.artists.find( { disabled: true } ).count();
+
+// User count
 var total_users = db.users.find( { created_at: { $lte: ISODate(searchEnd) } } ).count();
 
+// Touchpoints
 var resultsJSON = db.user_touchpoints.mapReduce (touchpointMap, touchpointReduce, {out: { inline : 1}, query: { "touchpoints.0.created_at" : { $gte: ISODate(searchStart), $lt: ISODate(searchEnd) } } } );
 var androidTouch = resultsJSON.results[0] ? resultsJSON.results[0].value.count : 0;
 var desktopTouch = resultsJSON.results[1] ? resultsJSON.results[1].value.count : 0;
@@ -203,18 +204,30 @@ var iOSTouch = resultsJSON.results[3] ? resultsJSON.results[3].value.count: 0;
 var webTouch = resultsJSON.results[2] ? resultsJSON.results[2].value.count : 0;
 var total_touchpoints = androidTouch + desktopTouch + iOSTouch + webTouch;
 
+// Likes
 var likesJSON = db.artist_updates.mapReduce( likesMap, likesReduce, { out: { inline: 1 }, query: { like_count: { $gte: 1 } } } );
 var likesCounter = 0;
   likesJSON.results.forEach( function(cell) { likesCounter += cell.value.count; });
 
-var ugcJSON = db.artist_updates.mapReduce( ugcMap, ugcReduce, { out: { inline: 1}, query: { user_id: { $exists: true } } } );
+// UGC
+var ugcJSON = db.artist_updates.mapReduce( ugcMap, ugcReduce, { out: { inline: 1 }, query: { user_id: { $exists: true } } } );
 var ugcCounter = 0;
   ugcJSON.results.forEach( function(cell) { ugcCounter += cell.value.count; });
+//var ugcAvgItemsPerArtist = ugcCounter / artistCount;
+
+// Engadgement
+var newUsers = db.users.find( { created_at: { $gte: ISODate(searchStart), $lte: ISODate(searchEnd) }, afa: { $exists: true } } ).count();
+var activeUsers = db.users.find( { afa: { $gte: ISODate(searchStart), $lte: ISODate(searchEnd) } } ).count();
+var returningUsers = activeUsers - newUsers;
+
+
 
 
 // Output results to the display or an email
 print("Total Registered Users: " + addCommas(total_users));
-print("New Users: " + addCommas(new_users_today));
+print("New Users: " + addCommas(newUsers));
+print("Active Users: " + addCommas(activeUsers));
+print("Returning Users: " + addCommas(returningUsers));
 print("Total Artist to Fan Connections: " + addCommas(total_tiles_collected));
 print("Number of Users Connecting to an Artist: " + addCommas(user_count));
 print("Avg Number of Artist Connections / User: " + addCommas((collection_count/user_count).toFixed(2)));
@@ -231,28 +244,27 @@ print("UGC Count");
 print("Total UGC Items: " + addCommas(ugcCounter));
 print("******************************");
 
-
-
-
 // Start Soundboard Top 100 listing
-print();
-print("******************************");
 
-var artistCount = addCommas(db.artists.count());
-
-print("Soundboard Top 100 Connections of " + artistCount + " Artists!");
+// Output the section header
+print("Soundboard Top 100 Connections of " + addCommas(artistCount) + " Artists!");
 print();
 
+// Function to get the number of likes per artist
 function getLikes(aid) {
   var retLikes = db.artist_updates.mapReduce( likesMap, likesReduce, { out: { inline: 1 }, query: { artist_id: ObjectId(aid) } } );
   return retLikes.results[0] ? retLikes.results[0].value.count: 0;
 }
+// End
 
+// Function to get the number of UGC content items per user.
 function getUGCCount(aid) {
   var retUGCCount = db.artist_updates.mapReduce( ugcMap, ugcReduce, { out: { inline: 1 }, query: { user_id: { $exists: true }, artist_id: ObjectId(aid) } } );
   return retUGCCount.results[0] ? retUGCCount.results[0].value.count: 0;
 }
+// End
 
+//  Define and output the Top 100 Songbird.me artists based on follow count along with their total likes and ugc items.
 var top100 = db.artists.find().sort({ tfc: -1 }).limit(100);
 var top100i = 1;
 top100.forEach( function(cell) {
