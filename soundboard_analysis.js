@@ -27,6 +27,7 @@
  * 8-09-12 - me - had to change the user_touchpoint.group function to a map/reduce block due to a limit of 20,000 unique keys on the group function.
  * 8-10-12 - me - had to change the collection_per_user.group function to a map/reduce block for same reason above.
  * 9-26-12 - me - added ugc map/reduce total and per artist counts.
+ * 10-4-12 - me - changed the method for calculating total follows and fixed a bug with ugc m/r query.
  */
 
 //Display Report Header
@@ -56,47 +57,14 @@ print("******************************");
  };
 
 
-// Begin user follow map /reduce function def
-function usertilesMap () {
-  
-  emit ( this.user_id, { count: 1 });
-  
-}
+// Begin user follow count section
+// This section of code is where we determine how many artists a user is following.
+// These vars also help us determine a bit of engandement becuase we can see how many users are active vs
+// how many just sing up and never follow an artist (which is hard to do since we auto-follow now).
+var total_tiles_collected = db.user_tiles.find().count();
 
-function usertilesReduce (key, values) {
-  
-  var total = 0;
-  for ( var i=0; i<values.length; i++ )
-    total += values[i].count;
-  return { count : total };
-  
-}
-// End function def
-
-var collections_per_user = db.user_tiles.mapReduce (usertilesMap, usertilesReduce, {out: { inline : 1 } } );
-
-total_tiles_collected = db.user_tiles.find().count();
-
-
-var user_count = 0,
-    collection_count = 0;
-
-function printColl(coll) {
-  user_count += 1;
-  collection_count += coll.value["count"];
-}
-
-// Caclculate the number of shares per user 
-var shares_per_user = db.user_actions.group(
-    { key: { user_id: true },
-      cond: { action: 0 },
-      reduce: function(obj,out) {
-                out.count += 1;
-              },
-      initial: { count: 0 }
-    });
-
-collections_per_user.results.forEach(printColl);
+var user_count = db.user_tiles.distinct("user_id").length;
+// end section
 
 
 // These vars set the current year and month and then set the date based upon 
@@ -171,7 +139,7 @@ function likesReduce (key, values) {
 
 // Setup the map / reduce for UGC
 function ugcMap () {
-  emit (this.user_id, { count: 1 });
+  emit (this.user_id, { count: this.invalid ? 0 : 1 });
 }
 
 function ugcReduce (key, values) {
@@ -210,13 +178,13 @@ var likesCounter = 0;
   likesJSON.results.forEach( function(cell) { likesCounter += cell.value.count; });
 
 // UGC
-var ugcJSON = db.artist_updates.mapReduce( ugcMap, ugcReduce, { out: { inline: 1 }, query: { user_id: { $exists: true } } } );
+var ugcJSON = db.artist_updates.mapReduce( ugcMap, ugcReduce, { out: { inline: 1 }, query: { user_id: { $ne: true } } } );
 var ugcCounter = 0;
   ugcJSON.results.forEach( function(cell) { ugcCounter += cell.value.count; });
 //var ugcAvgItemsPerArtist = ugcCounter / artistCount;
 
 // Engadgement
-var newUsers = db.users.find( { created_at: { $gte: ISODate(searchStart), $lte: ISODate(searchEnd) }, afa: { $exists: true } } ).count();
+var newUsers = db.users.find( { created_at: { $gte: ISODate(searchStart), $lte: ISODate(searchEnd) }, afa: { $ne: true } } ).count();
 var activeUsers = db.users.find( { afa: { $gte: ISODate(searchStart), $lte: ISODate(searchEnd) } } ).count();
 var returningUsers = activeUsers - newUsers;
 
@@ -230,7 +198,7 @@ print("Active Users: " + addCommas(activeUsers));
 print("Returning Users: " + addCommas(returningUsers));
 print("Total Artist to Fan Connections: " + addCommas(total_tiles_collected));
 print("Number of Users Connecting to an Artist: " + addCommas(user_count));
-print("Avg Number of Artist Connections / User: " + addCommas((collection_count/user_count).toFixed(2)));
+print("Avg Number of Artist Connections / User: " + addCommas((total_tiles_collected/user_count).toFixed(2)));
 print("Total Likes: " + addCommas(likesCounter));
 print("******************************");
 print("Touchpoints Count - if report is run before 12:00 counts are previous day.");
