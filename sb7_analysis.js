@@ -115,7 +115,7 @@ function likesReduce (key, values) {
 
 // Setup the map / reduce for UGC
 function ugcMap () {
-  emit (this.user_id, { count: 1 });
+  emit (this.user_id, { count: this.invalid ? 0 : 1 });
 }
 
 function ugcReduce (key, values) {
