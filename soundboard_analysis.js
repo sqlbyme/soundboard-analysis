@@ -137,6 +137,19 @@ function likesReduce (key, values) {
   
 }
 
+// Setup the map / reduce for Comments
+function commentsMap () {
+	emit ( this.artist_id, { count: this.comment_count });
+}
+
+function commentsReduce (key, values) {
+  var total = 0;
+  for ( var i=0; i<values.length; i++ )
+    total += values[i].count;
+  return { count: total };
+  
+}
+
 // Setup the map / reduce for UGC
 function ugcMap () {
   emit (this.user_id, { count: this.invalid ? 0 : 1 });
@@ -177,6 +190,11 @@ var likesJSON = db.artist_updates.mapReduce( likesMap, likesReduce, { out: { inl
 var likesCounter = 0;
   likesJSON.results.forEach( function(cell) { likesCounter += cell.value.count; });
 
+// Comments
+var commentsJSON = db.artist_updates.mapReduce( commentsMap, commentsReduce, { out: { inline: 1 }, query: { comment_count: { $gte: 1 } } } );
+var commentsCounter = 0;
+    commentsJSON.results.forEach( function(cell) { commentsCounter += cell.value.count; });
+
 // UGC
 var ugcJSON = db.artist_updates.mapReduce( ugcMap, ugcReduce, { out: { inline: 1 }, query: { user_id: { $ne: true } } } );
 var ugcCounter = 0;
@@ -200,6 +218,7 @@ print("Total Artist to Fan Connections: " + addCommas(total_tiles_collected));
 print("Number of Users Connecting to an Artist: " + addCommas(user_count));
 print("Avg Number of Artist Connections / User: " + addCommas((total_tiles_collected/user_count).toFixed(2)));
 print("Total Likes: " + addCommas(likesCounter));
+print("Total Comments: " + addCommas(commentsCounter));
 print("******************************");
 print("Touchpoints Count - if report is run before 12:00 counts are previous day.");
 print("Android Touchpoints: " + addCommas(androidTouch));
@@ -225,6 +244,13 @@ function getLikes(aid) {
 }
 // End
 
+// Function to get the number of comments per artist
+function getComments(aid) {
+  var retComments = db.artist_updates.mapReduce( commentsMap, commentsReduce, { out: { inline: 1 }, query: { artist_id: ObjectId(aid) } } );
+  return retComments.results[0] ? retComments.results[0].value.count: 0;
+}
+// End
+
 // Function to get the number of UGC content items per user.
 function getUGCCount(aid) {
   var retUGCCount = db.artist_updates.mapReduce( ugcMap, ugcReduce, { out: { inline: 1 }, query: { user_id: { $exists: true }, artist_id: ObjectId(aid) } } );
@@ -236,7 +262,7 @@ function getUGCCount(aid) {
 var top100 = db.artists.find().sort({ tfc: -1 }).limit(100);
 var top100i = 1;
 top100.forEach( function(cell) {
-  print(top100i + ": " + cell.artist_name + " - " + addCommas(cell.tfc) + " fan connections - " + addCommas(getLikes(cell._id)) + " like(s) - " + addCommas(getUGCCount(cell._id)) + " ugc item(s).");
+  print(top100i + ": " + cell.artist_name + " - " + addCommas(cell.tfc) + " fan connections - " + addCommas(getLikes(cell._id)) + " like(s) - " + addCommas(getComments(cell._id)) + " comment(s) - " + addCommas(getUGCCount(cell._id)) + " ugc item(s).");
   top100i ++;
 });
 // End Soundboard Top 100 Listing
