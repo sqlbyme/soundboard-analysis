@@ -181,8 +181,8 @@ var total_users = db.users.find( { created_at: { $lte: ISODate(searchEnd) } } ).
 var resultsJSON = db.user_touchpoints.mapReduce (touchpointMap, touchpointReduce, {out: { inline : 1}, query: { "touchpoints.0.created_at" : { $gte: ISODate(searchStart), $lt: ISODate(searchEnd) } } } );
 var androidTouch = resultsJSON.results[0] ? resultsJSON.results[0].value.count : 0;
 var desktopTouch = resultsJSON.results[1] ? resultsJSON.results[1].value.count : 0;
-var iOSTouch = resultsJSON.results[3] ? resultsJSON.results[3].value.count: 0;
-var webTouch = resultsJSON.results[2] ? resultsJSON.results[2].value.count : 0;
+var iOSTouch = resultsJSON.results[2] ? resultsJSON.results[2].value.count: 0;
+var webTouch = resultsJSON.results[3] ? resultsJSON.results[3].value.count : 0;
 var total_touchpoints = androidTouch + desktopTouch + iOSTouch + webTouch;
 
 // Likes
