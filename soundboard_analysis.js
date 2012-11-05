@@ -38,6 +38,9 @@ function IsAM(d) {
 }
 // end IsAm
 
+print("Mime-Version: 1.0");
+print("Content-Type: text/html");
+
 // Output the report header
 print("******************************");
 IsAM(new Date()) ? print("Soundboard Morning Stats" ) : print("Soundboard Afternoon Stats");
