@@ -36,6 +36,10 @@
 function IsAM(d) {
    return (d.getHours() < 12 ? true : false);
 }
+// end IsAm
+
+// try html
+print("<html><head /><body>");
 
 // Output the report header
 print("******************************");
@@ -239,22 +243,26 @@ print();
 
 // Function to get the number of likes per artist
 function getLikes(aid) {
-  var retLikes = db.artist_updates.mapReduce( likesMap, likesReduce, { out: { inline: 1 }, query: { artist_id: ObjectId(aid) } } );
+  var retLikes = db.artist_updates.mapReduce( likesMap, likesReduce, { out: { inline: 1 }, query: { artist_id: aid } } );
   return retLikes.results[0] ? retLikes.results[0].value.count: 0;
 }
 // End
 
 // Function to get the number of comments per artist
 function getComments(aid) {
-  var retComments = db.artist_updates.mapReduce( commentsMap, commentsReduce, { out: { inline: 1 }, query: { artist_id: ObjectId(aid) } } );
+  var retComments = db.artist_updates.mapReduce( commentsMap, commentsReduce, { out: { inline: 1 }, query: { artist_id: aid } } );
   return retComments.results[0] ? retComments.results[0].value.count: 0;
 }
 // End
 
 // Function to get the number of UGC content items per user.
 function getUGCCount(aid) {
-  var retUGCCount = db.artist_updates.mapReduce( ugcMap, ugcReduce, { out: { inline: 1 }, query: { user_id: { $exists: true }, artist_id: ObjectId(aid) } } );
-  return retUGCCount.results[0] ? retUGCCount.results[0].value.count: 0;
+  var retUGCCount = db.artist_updates.mapReduce( ugcMap, ugcReduce, { out: { inline: 1 }, query: { user_id: { $exists: true }, artist_id: aid } } );
+  var counter = 0;
+  retUGCCount.results.forEach( function(cell) {
+    counter += cell.value.count;	
+});
+  return counter ? counter: 0;
 }
 // End
 
@@ -266,3 +274,6 @@ top100.forEach( function(cell) {
   top100i ++;
 });
 // End Soundboard Top 100 Listing
+
+//end html
+print("</body></html>");
