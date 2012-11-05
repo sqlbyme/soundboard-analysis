@@ -38,12 +38,6 @@ function IsAM(d) {
 }
 // end IsAm
 
-// try html
-print("<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>");
-print("<html xmlns='http://www.w3.org/1999/xhtml'>");
-print("<head><meta http-equiv='Content-Type' content='text/html; charset=utf-8'>");
-print("</head>");
-
 // Output the report header
 print("******************************");
 IsAM(new Date()) ? print("Soundboard Morning Stats" ) : print("Soundboard Afternoon Stats");
@@ -269,14 +263,17 @@ function getUGCCount(aid) {
 }
 // End
 
+// Setup table
+print("<table>");
 //  Define and output the Top 100 Songbird.me artists based on follow count along with their total likes and ugc items.
 var top100 = db.artists.find().sort({ tfc: -1 }).limit(100);
 var top100i = 1;
 top100.forEach( function(cell) {
-  print(top100i + ": " + cell.artist_name + " - " + addCommas(cell.tfc) + " fan connections - " + addCommas(getLikes(cell._id)) + " like(s) - " + addCommas(getComments(cell._id)) + " comment(s) - " + addCommas(getUGCCount(cell._id)) + " ugc item(s).");
+  print("<tr>")
+  print("<td>" + top100i + ": " + cell.artist_name + " - " + addCommas(cell.tfc) + " fan connections - " + addCommas(getLikes(cell._id)) + " like(s) - " + addCommas(getComments(cell._id)) + " comment(s) - " + addCommas(getUGCCount(cell._id)) + " ugc item(s).</td>");
   top100i ++;
 });
+  print("</tr>")
 // End Soundboard Top 100 Listing
 
-//end html
-print("</body></html>");
+// End Report
