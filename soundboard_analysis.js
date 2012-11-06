@@ -269,7 +269,7 @@ function getUGCCount(aid) {
 // End
 
 // Setup table
-print("<table>");
+print("<table border'1'");
 print("<th>#</th><th>Name</th><th>Fan Connections</th><th>Likes</th><th>Comments</th><th>UGC Items</th>");
 //  Define and output the Top 100 Songbird.me artists based on follow count along with their total likes and ugc items.
 var top100 = db.artists.find().sort({ tfc: -1 }).limit(100);
