@@ -41,13 +41,13 @@ function IsAM(d) {
 print("Mime-Version: 1.0");
 print("Content-Type: text/html");
 print("To:mike@songbirdnest.com");
-print("Subject: Test");
+print("Subject: Daily Soundboard Stats");
 
 // Output the report header
-print("******************************");
-IsAM(new Date()) ? print("Soundboard Morning Stats" ) : print("Soundboard Afternoon Stats");
-print(new Date().toLocaleDateString() + " @ " + new Date().toLocaleTimeString());
-print("******************************");
+print("<br/>******************************<br/>");
+IsAM(new Date()) ? print("Soundboard Morning Stats<br/>" ) : print("Soundboard Afternoon Stats<br/>");
+print(new Date().toLocaleDateString() + " @ " + new Date().toLocaleTimeString() + "<br/>");
+print("******************************<br/>");
 
 // This is the addCommas function - we use this function to make numbers larger than 1000 prettier to display.
  function addCommas(nStr) {
@@ -216,32 +216,32 @@ var returningUsers = activeUsers - newUsers;
 
 
 // Output results to the display or an email
-print("Total Registered Users: " + addCommas(total_users));
-print("New Users: " + addCommas(newUsers));
-print("Active Users: " + addCommas(activeUsers));
-print("Returning Users: " + addCommas(returningUsers));
-print("Total Artist to Fan Connections: " + addCommas(total_tiles_collected));
-print("Number of Users Connecting to an Artist: " + addCommas(user_count));
-print("Avg Number of Artist Connections / User: " + addCommas((total_tiles_collected/user_count).toFixed(2)));
-print("Total Likes: " + addCommas(likesCounter));
-print("Total Comments: " + addCommas(commentsCounter));
+print("Total Registered Users: " + addCommas(total_users) + "<br/>");
+print("New Users: " + addCommas(newUsers) + "<br/>");
+print("Active Users: " + addCommas(activeUsers) + "<br/>");
+print("Returning Users: " + addCommas(returningUsers) + "<br/>");
+print("Total Artist to Fan Connections: " + addCommas(total_tiles_collected) + "<br/>");
+print("Number of Users Connecting to an Artist: " + addCommas(user_count) + "<br/>");
+print("Avg Number of Artist Connections / User: " + addCommas((total_tiles_collected/user_count).toFixed(2)) + "<br/>");
+print("Total Likes: " + addCommas(likesCounter) + "<br/>");
+print("Total Comments: " + addCommas(commentsCounter) + "<br/>");
 print("******************************");
-print("Touchpoints Count - if report is run before 12:00 counts are previous day.");
-print("Android Touchpoints: " + addCommas(androidTouch));
-print("Desktop Touchpoints: " + addCommas(desktopTouch));
-print("iOS Touchpoints: " + addCommas(iOSTouch));
-print("Web Touchpoints: " + addCommas(webTouch));
-print("Total Touchpoints: " + addCommas(total_touchpoints));
-print("******************************");
-print("UGC Count");
-print("Total UGC Items: " + addCommas(ugcCounter));
-print("******************************");
+print("Touchpoints Count - if report is run before 12:00 counts are previous day.<br/>");
+print("Android Touchpoints: " + addCommas(androidTouch) + "<br/>");
+print("Desktop Touchpoints: " + addCommas(desktopTouch) + "<br/>");
+print("iOS Touchpoints: " + addCommas(iOSTouch) + "<br/>");
+print("Web Touchpoints: " + addCommas(webTouch) + "<br/>");
+print("Total Touchpoints: " + addCommas(total_touchpoints) + "<br/>");
+print("******************************<br/>");
+print("UGC Count<br/>");
+print("Total UGC Items: " + addCommas(ugcCounter) + "<br/>");
+print("******************************<br/>");
 
 // Start Soundboard Top 100 listing
 
 // Output the section header
-print("Soundboard Top 100 Connections of " + addCommas(artistCount) + " Artists!");
-print();
+print("Soundboard Top 100 Connections of " + addCommas(artistCount) + " Artists!<br/>");
+print("<br/>");
 
 // Function to get the number of likes per artist
 function getLikes(aid) {
