@@ -276,7 +276,7 @@ var top100 = db.artists.find().sort({ tfc: -1 }).limit(100);
 var top100i = 1;
 top100.forEach( function(cell) {
   print("<tr>")
-  print("<td>" + top100i + ": " + cell.artist_name + " - " + addCommas(cell.tfc) + " fan connections - " + addCommas(getLikes(cell._id)) + " like(s) - " + addCommas(getComments(cell._id)) + " comment(s) - " + addCommas(getUGCCount(cell._id)) + " ugc item(s).</td>");
+  print("<td>" + top100i + "</td><td>" + cell.artist_name + "</td><td>" + addCommas(cell.tfc) + "</td><td>" + addCommas(getLikes(cell._id)) + "</td><td>" + addCommas(getComments(cell._id)) + "</td><td>" + addCommas(getUGCCount(cell._id)) + "</td>");
   top100i ++;
 });
   print("</tr>")
