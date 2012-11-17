@@ -40,7 +40,7 @@ function IsAM(d) {
 
 print("Mime-Version: 1.0");
 print("Content-Type: text/html");
-print("To:dailyreports@songbirdnest.com");
+print("To: dailyreports@songbirdnest.com");
 print("Subject: Daily Soundboard Stats");
 
 // Output the report header
