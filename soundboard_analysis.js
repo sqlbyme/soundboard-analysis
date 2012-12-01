@@ -28,6 +28,7 @@
  * 8-10-12 - me - had to change the collection_per_user.group function to a map/reduce block for same reason above.
  * 9-26-12 - me - added ugc map/reduce total and per artist counts.
  * 10-4-12 - me - changed the method for calculating total follows and fixed a bug with ugc m/r query.
+ * 12-1-12 - me - changing the IsAM check on the date set method to always just get yesterdays stats.
  */
 
 //Display Report Header
@@ -77,7 +78,7 @@ var user_count = db.user_tiles.distinct("user_id").length;
 // whether or not it is before noon. Could probably remove the IsAM check
 // based on the fact that we no longer run the report twice a day.
 var year = new Date().getFullYear().toString();
-var yesterday = IsAM(new Date()) ? new Date().getDate()-1 : new Date().getDate();
+var yesterday = new Date().getDate()-1;
 var month = new Date().getMonth()+1;
 
 
