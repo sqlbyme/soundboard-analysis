@@ -29,6 +29,7 @@
  * 9-26-12 - me - added ugc map/reduce total and per artist counts.
  * 10-4-12 - me - changed the method for calculating total follows and fixed a bug with ugc m/r query.
  * 12-1-12 - me - changing the IsAM check on the date set method to always just get yesterdays stats.
+ * 12-14-12 - me - added polling data for Alternative Login Methods.
  */
 
 //Display Report Header
@@ -213,7 +214,9 @@ var newUsers = db.users.find( { created_at: { $gte: ISODate(searchStart), $lte: 
 var activeUsers = db.users.find( { afa: { $gte: ISODate(searchStart), $lte: ISODate(searchEnd) } } ).count();
 var returningUsers = activeUsers - newUsers;
 
-
+// Alternate Login Polling
+var polls = db.polls.findOne();
+var pollTotal = polls.votes.email + polls.votes.twitter + polls.votes.google
 
 
 // Output results to the display or an email
@@ -236,6 +239,12 @@ print("Total Touchpoints: " + addCommas(total_touchpoints) + "<br/>");
 print("******************************<br/>");
 print("UGC Count<br/>");
 print("Total UGC Items: " + addCommas(ugcCounter) + "<br/>");
+print("******************************<br/>");
+print("Alternate Login Polls<br/>");
+print("Total Votes Cast: " + addCommas(pollTotal) + "<br/>");
+print("Email: " + addCommas(polls.votes.email) + "<br/>");
+print("Google: " + addCommas(polls.votes.google) + "<br/>");
+print("Twitter: " + addCommas(polls.votes.twitter) + "<br/>");
 print("******************************<br/>");
 
 // Start Soundboard Top 100 listing
