@@ -158,10 +158,12 @@ function commentsReduce (key, values) {
   
 }
 
+/* Commented out 2-5-13 as UGC is no longer an interesting metric to us.
 // Setup the map / reduce for UGC
 function ugcMap () {
   emit (this.user_id, { count: this.invalid ? 0 : 1 });
 }
+
 
 function ugcReduce (key, values) {
   var total = 0;
@@ -170,6 +172,7 @@ function ugcReduce (key, values) {
   return { count: total };  
 }
 // End function def
+*/
 
 // Function to get the Artist name given a particular artist id.
 function getName(aid) {
@@ -203,11 +206,13 @@ var commentsJSON = db.artist_updates.mapReduce( commentsMap, commentsReduce, { o
 var commentsCounter = 0;
     commentsJSON.results.forEach( function(cell) { commentsCounter += cell.value.count; });
 
+/*
 // UGC
 var ugcJSON = db.artist_updates.mapReduce( ugcMap, ugcReduce, { out: { inline: 1 }, query: { user_id: { $ne: true } } } );
 var ugcCounter = 0;
   ugcJSON.results.forEach( function(cell) { ugcCounter += cell.value.count; });
 //var ugcAvgItemsPerArtist = ugcCounter / artistCount;
+*/
 
 // Engadgement
 var newUsers = db.users.find( { created_at: { $gte: ISODate(searchStart), $lte: ISODate(searchEnd) }, afa: { $ne: true } } ).count();
@@ -236,9 +241,11 @@ print("Desktop Touchpoints: " + addCommas(desktopTouch) + "<br/>");
 print("iOS Touchpoints: " + addCommas(iOSTouch) + "<br/>");
 print("Web Touchpoints: " + addCommas(webTouch) + "<br/>");
 print("Total Touchpoints: " + addCommas(total_touchpoints) + "<br/>");
+/*
 print("******************************<br/>");
 print("UGC Count<br/>");
 print("Total UGC Items: " + addCommas(ugcCounter) + "<br/>");
+*/
 print("******************************<br/>");
 print("Alternate Login Polls<br/>");
 print("Total Votes Cast: " + addCommas(pollTotal) + "<br/>");
@@ -267,6 +274,7 @@ function getComments(aid) {
 }
 // End
 
+/*
 // Function to get the number of UGC content items per user.
 function getUGCCount(aid) {
   var retUGCCount = db.artist_updates.mapReduce( ugcMap, ugcReduce, { out: { inline: 1 }, query: { user_id: { $exists: true }, artist_id: aid } } );
@@ -276,17 +284,20 @@ function getUGCCount(aid) {
 });
   return counter ? counter: 0;
 }
+*/
 // End
 
 // Setup table
 print("<table>");
-print("<th>#</th><th>Name</th><th>Fan Connections</th><th>Likes</th><th>Comments</th><th>UGC Items</th>");
+//print("<th>#</th><th>Name</th><th>Fan Connections</th><th>Likes</th><th>Comments</th><th>UGC Items</th>");
+print("<th>#</th><th>Name</th><th>Fan Connections</th><th>Likes</th><th>Comments</th>");
 //  Define and output the Top 100 Songbird.me artists based on follow count along with their total likes and ugc items.
 var top100 = db.artists.find().sort({ tfc: -1 }).limit(100);
 var top100i = 1;
 top100.forEach( function(cell) {
   print("<tr>")
-  print("<td>" + top100i + "</td><td>" + cell.artist_name + "</td><td>" + addCommas(cell.tfc) + "</td><td>" + addCommas(getLikes(cell._id)) + "</td><td>" + addCommas(getComments(cell._id)) + "</td><td>" + addCommas(getUGCCount(cell._id)) + "</td>");
+  //print("<td>" + top100i + "</td><td>" + cell.artist_name + "</td><td>" + addCommas(cell.tfc) + "</td><td>" + addCommas(getLikes(cell._id)) + "</td><td>" + addCommas(getComments(cell._id)) + "</td><td>" + addCommas(getUGCCount(cell._id)) + "</td>");
+  print("<td>" + top100i + "</td><td>" + cell.artist_name + "</td><td>" + addCommas(cell.tfc) + "</td><td>" + addCommas(getLikes(cell._id)) + "</td><td>" + addCommas(getComments(cell._id)) + "</td>");
   top100i ++;
 });
   print("</tr>")
