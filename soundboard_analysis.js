@@ -30,6 +30,7 @@
  * 10-4-12 - me - changed the method for calculating total follows and fixed a bug with ugc m/r query.
  * 12-1-12 - me - changing the IsAM check on the date set method to always just get yesterdays stats.
  * 12-14-12 - me - added polling data for Alternative Login Methods.
+ * 03-07-13 - me - commented out the UGC and Email Poll portios of the report.
  */
 
 //Display Report Header
@@ -219,9 +220,13 @@ var newUsers = db.users.find( { created_at: { $gte: ISODate(searchStart), $lte: 
 var activeUsers = db.users.find( { afa: { $gte: ISODate(searchStart), $lte: ISODate(searchEnd) } } ).count();
 var returningUsers = activeUsers - newUsers;
 
+/*
+ * commented out 03-07-2013 as we are no longer tracking the login polls.
+ * Deprecated code should be removed no later than one year from comment out date.
 // Alternate Login Polling
 var polls = db.polls.findOne();
 var pollTotal = polls.votes.email + polls.votes.twitter + polls.votes.google
+*/
 
 
 // Output results to the display or an email
@@ -245,13 +250,13 @@ print("Total Touchpoints: " + addCommas(total_touchpoints) + "<br/>");
 print("******************************<br/>");
 print("UGC Count<br/>");
 print("Total UGC Items: " + addCommas(ugcCounter) + "<br/>");
-*/
 print("******************************<br/>");
 print("Alternate Login Polls<br/>");
 print("Total Votes Cast: " + addCommas(pollTotal) + "<br/>");
 print("Email: " + addCommas(polls.votes.email) + "<br/>");
 print("Google: " + addCommas(polls.votes.google) + "<br/>");
 print("Twitter: " + addCommas(polls.votes.twitter) + "<br/>");
+*/
 print("******************************<br/>");
 
 // Start Soundboard Top 100 listing
