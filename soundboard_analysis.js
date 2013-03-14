@@ -216,10 +216,9 @@ var ugcCounter = 0;
 */
 
 // Engadgement
-var newUsers = db.users.find( { created_at: { $gte: ISODate(searchStart), $lte: ISODate(searchEnd) }, afa: { $ne: true } } ).count();
-var activeUsers = db.users.find( { afa: { $gte: ISODate(searchStart), $lte: ISODate(searchEnd) } } ).count();
-var returningUsers = activeUsers - newUsers;
-
+var newUsers = db.users.find( { created_at: { $gte: ISODate(searchStart), $lte: ISODate(searchEnd) } } ).count();
+var returningUsers = db.users.find( { afa: { $gte: ISODate(searchStart), $lte: ISODate(searchEnd) }, created_at: { $lt: ISODate(searchStart) } } ).count();
+var activeUsers = newUsers + returningUsers;
 /*
  * commented out 03-07-2013 as we are no longer tracking the login polls.
  * Deprecated code should be removed no later than one year from comment out date.
