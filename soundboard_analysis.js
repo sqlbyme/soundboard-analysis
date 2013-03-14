@@ -13,7 +13,7 @@
  * if you have questions/comments about this file or the job that runs it please contatc
  * mike@songbirdnest.com.
  *
- * if mike does not work here anymore and this job is still running and being used on a daily 
+ * if mike does not work here anymore and this job is still running and being used on a daily
  * basis...trust me, you've got much bigger problems than dealing with this file.  Good luck!
  *
  */
@@ -31,15 +31,10 @@
  * 12-1-12 - me - changing the IsAM check on the date set method to always just get yesterdays stats.
  * 12-14-12 - me - added polling data for Alternative Login Methods.
  * 03-07-13 - me - commented out the UGC and Email Poll portios of the report.
+ * 03-14-13 - as & me - Andreas and I went through a major refactor of the searchStart and searchEnd date code and the Engagement numbers query.
  */
 
-//Display Report Header
-
-// First we need to determine if it is before or after noon
-function IsAM(d) {
-   return (d.getHours() < 12 ? true : false);
-}
-// end IsAm
+// Format Report Email Header
 
 print("Mime-Version: 1.0");
 print("Content-Type: text/html");
@@ -48,21 +43,21 @@ print("Subject: Daily Soundboard Stats");
 
 // Output the report header
 print("<br/>******************************<br/>");
-IsAM(new Date()) ? print("Soundboard Morning Stats<br/>" ) : print("Soundboard Afternoon Stats<br/>");
+print("Soundboard Daily Stats<br/>" );
 print(new Date().toLocaleDateString() + " @ " + new Date().toLocaleTimeString() + "<br/>");
 print("******************************<br/>");
 
 // This is the addCommas function - we use this function to make numbers larger than 1000 prettier to display.
  function addCommas(nStr) {
-	nStr += '';
-	x = nStr.split('.');
-	x1 = x[0];
-	x2 = x.length > 1 ? '.' + x[1] : '';
-	var rgx = /(\d+)(\d{3})/;
-	while (rgx.test(x1)) {
-		x1 = x1.replace(rgx, '$1' + ',' + '$2');
-	}
-	return x1 + x2;
+  nStr += '';
+  x = nStr.split('.');
+  x1 = x[0];
+  x2 = x.length > 1 ? '.' + x[1] : '';
+  var rgx = /(\d+)(\d{3})/;
+  while (rgx.test(x1)) {
+    x1 = x1.replace(rgx, '$1' + ',' + '$2');
+  }
+  return x1 + x2;
  };
 
 
@@ -74,14 +69,6 @@ var total_tiles_collected = db.user_tiles.find().count();
 
 var user_count = db.user_tiles.distinct("user_id").length;
 // end section
-
-
-// These vars set the current year and month and then set the date based upon 
-// whether or not it is before noon. Could probably remove the IsAM check
-// based on the fact that we no longer run the report twice a day.
-var year = new Date().getFullYear().toString();
-var yesterday = new Date().getDate()-1;
-var month = new Date().getMonth()+1;
 
 
 // This function adds a leading zero to an int value
@@ -97,32 +84,21 @@ function addLeadingZero(input) {
   {
     outputString = input.toString();
   }
-  
+
   return outputString;
 }
 
-
-// This function sets a string value which will be used as an arg of an ISODate call later
-function setStartDate(year, month, day) {
-  var outDate = year + "-" + addLeadingZero(month) + "-" + addLeadingZero(day) + "T00:00:00-0800";
-  return outDate;
-}
-
-// Same as above
-function setEndDate(year, month, day){
-  var outDate = year + "-" + addLeadingZero(month) + "-" + addLeadingZero(day) + "T23:59:59-0800";
-  return outDate;
-}
-
 // Set the start and end dates to search between
-var searchStart = setStartDate(year, month, yesterday);
-var searchEnd = setEndDate(year, month, yesterday);
+var searchStart = new Date(ISODate() - 86000000);
+var searchEnd = new Date(ISODate());
+searchStart.setHours(0, 7, 0, 0);
+searchEnd.setHours(0, 6, 59, 999);
 
 
 // Setup the map / reduce for the Touchpoints
 function touchpointMap () {
   emit ( this.touchpoints[0].touchpoint, { count: 1 });
-  
+
 }
 
 function touchpointReduce (key, values) {
@@ -135,7 +111,7 @@ function touchpointReduce (key, values) {
 
 // Setup the map / reduce for Likes
 function likesMap () {
-	emit ( this.artist_id, { count: this.like_count });
+  emit ( this.artist_id, { count: this.like_count });
 }
 
 function likesReduce (key, values) {
@@ -143,12 +119,12 @@ function likesReduce (key, values) {
   for ( var i=0; i<values.length; i++ )
     total += values[i].count;
   return { count: total };
-  
+
 }
 
 // Setup the map / reduce for Comments
 function commentsMap () {
-	emit ( this.artist_id, { count: this.comment_count });
+  emit ( this.artist_id, { count: this.comment_count });
 }
 
 function commentsReduce (key, values) {
@@ -156,24 +132,8 @@ function commentsReduce (key, values) {
   for ( var i=0; i<values.length; i++ )
     total += values[i].count;
   return { count: total };
-  
-}
 
-/* Commented out 2-5-13 as UGC is no longer an interesting metric to us.
-// Setup the map / reduce for UGC
-function ugcMap () {
-  emit (this.user_id, { count: this.invalid ? 0 : 1 });
 }
-
-
-function ugcReduce (key, values) {
-  var total = 0;
-  for ( var i=0; i<values.length; i++ )
-    total += values[i].count;
-  return { count: total };  
-}
-// End function def
-*/
 
 // Function to get the Artist name given a particular artist id.
 function getName(aid) {
@@ -187,10 +147,10 @@ var artistCount = db.artists.find( { disabled: { $ne: true } } ).count();
 var diasbledArtistCount = db.artists.find( { disabled: true } ).count();
 
 // User count
-var total_users = db.users.find( { created_at: { $lte: ISODate(searchEnd) } } ).count();
+var total_users = db.users.find( { created_at: { $lte: searchEnd } } ).count();
 
 // Touchpoints
-var resultsJSON = db.user_touchpoints.mapReduce (touchpointMap, touchpointReduce, {out: { inline : 1}, query: { "touchpoints.0.created_at" : { $gte: ISODate(searchStart), $lt: ISODate(searchEnd) } } } );
+var resultsJSON = db.user_touchpoints.mapReduce (touchpointMap, touchpointReduce, {out: { inline : 1}, query: { "touchpoints.0.created_at" : { $gte: searchStart, $lt: searchEnd } } } );
 var androidTouch = resultsJSON.results[0] ? resultsJSON.results[0].value.count : 0;
 var desktopTouch = resultsJSON.results[1] ? resultsJSON.results[1].value.count : 0;
 var iOSTouch = resultsJSON.results[2] ? resultsJSON.results[2].value.count: 0;
@@ -207,26 +167,10 @@ var commentsJSON = db.artist_updates.mapReduce( commentsMap, commentsReduce, { o
 var commentsCounter = 0;
     commentsJSON.results.forEach( function(cell) { commentsCounter += cell.value.count; });
 
-/*
-// UGC
-var ugcJSON = db.artist_updates.mapReduce( ugcMap, ugcReduce, { out: { inline: 1 }, query: { user_id: { $ne: true } } } );
-var ugcCounter = 0;
-  ugcJSON.results.forEach( function(cell) { ugcCounter += cell.value.count; });
-//var ugcAvgItemsPerArtist = ugcCounter / artistCount;
-*/
-
 // Engadgement
-var newUsers = db.users.find( { created_at: { $gte: ISODate(searchStart), $lte: ISODate(searchEnd) } } ).count();
-var returningUsers = db.users.find( { afa: { $gte: ISODate(searchStart), $lte: ISODate(searchEnd) }, created_at: { $lt: ISODate(searchStart) } } ).count();
+var newUsers = db.users.find( { created_at: { $gte: searchStart, $lte: searchEnd } } ).count();
+var returningUsers = db.users.find( { afa: { $gte: searchStart, $lte: searchEnd }, created_at: { $lt: searchStart } } ).count();
 var activeUsers = newUsers + returningUsers;
-/*
- * commented out 03-07-2013 as we are no longer tracking the login polls.
- * Deprecated code should be removed no later than one year from comment out date.
-// Alternate Login Polling
-var polls = db.polls.findOne();
-var pollTotal = polls.votes.email + polls.votes.twitter + polls.votes.google
-*/
-
 
 // Output results to the display or an email
 print("Total Registered Users: " + addCommas(total_users) + "<br/>");
@@ -245,17 +189,6 @@ print("Desktop Touchpoints: " + addCommas(desktopTouch) + "<br/>");
 print("iOS Touchpoints: " + addCommas(iOSTouch) + "<br/>");
 print("Web Touchpoints: " + addCommas(webTouch) + "<br/>");
 print("Total Touchpoints: " + addCommas(total_touchpoints) + "<br/>");
-/*
-print("******************************<br/>");
-print("UGC Count<br/>");
-print("Total UGC Items: " + addCommas(ugcCounter) + "<br/>");
-print("******************************<br/>");
-print("Alternate Login Polls<br/>");
-print("Total Votes Cast: " + addCommas(pollTotal) + "<br/>");
-print("Email: " + addCommas(polls.votes.email) + "<br/>");
-print("Google: " + addCommas(polls.votes.google) + "<br/>");
-print("Twitter: " + addCommas(polls.votes.twitter) + "<br/>");
-*/
 print("******************************<br/>");
 
 // Start Soundboard Top 100 listing
@@ -278,18 +211,6 @@ function getComments(aid) {
 }
 // End
 
-/*
-// Function to get the number of UGC content items per user.
-function getUGCCount(aid) {
-  var retUGCCount = db.artist_updates.mapReduce( ugcMap, ugcReduce, { out: { inline: 1 }, query: { user_id: { $exists: true }, artist_id: aid } } );
-  var counter = 0;
-  retUGCCount.results.forEach( function(cell) {
-    counter += cell.value.count;	
-});
-  return counter ? counter: 0;
-}
-*/
-// End
 
 // Setup table
 print("<table>");
