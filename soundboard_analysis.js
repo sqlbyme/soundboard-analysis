@@ -32,6 +32,7 @@
  * 12-14-12 - me - added polling data for Alternative Login Methods.
  * 03-07-13 - me - commented out the UGC and Email Poll portios of the report.
  * 03-14-13 - as & me - Andreas and I went through a major refactor of the searchStart and searchEnd date code and the Engagement numbers query.
+ * 04-11-13 - me & as - Added the New Users by account type counts to report.
  */
 
 // Format Report Email Header
@@ -172,24 +173,32 @@ var newUsers = db.users.find( { created_at: { $gte: searchStart, $lte: searchEnd
 var returningUsers = db.users.find( { afa: { $gte: searchStart, $lte: searchEnd }, created_at: { $lt: searchStart } } ).count();
 var activeUsers = newUsers + returningUsers;
 
+// User count by auth type
+var emailUsers = db.users.find({"accounts._id": null, created_at: { $gte: searchStart, $lte: searchEnd}}).count();
+var fbUsers = newUsers - emailUsers;
+
 // Output results to the display or an email
-print("Total Registered Users: " + addCommas(total_users) + "<br/>");
-print("New Users: " + addCommas(newUsers) + "<br/>");
-print("Active Users: " + addCommas(activeUsers) + "<br/>");
-print("Returning Users: " + addCommas(returningUsers) + "<br/>");
-print("Total Artist to Fan Connections: " + addCommas(total_tiles_collected) + "<br/>");
-print("Number of Users Connecting to an Artist: " + addCommas(user_count) + "<br/>");
-print("Avg Number of Artist Connections / User: " + addCommas((total_tiles_collected/user_count).toFixed(2)) + "<br/>");
-print("Total Likes: " + addCommas(likesCounter) + "<br/>");
-print("Total Comments: " + addCommas(commentsCounter) + "<br/>");
-print("******************************<br/>");
-print("Touchpoints Count - if report is run before 12:00 counts are previous day.<br/>");
-print("Android Touchpoints: " + addCommas(androidTouch) + "<br/>");
-print("Desktop Touchpoints: " + addCommas(desktopTouch) + "<br/>");
-print("iOS Touchpoints: " + addCommas(iOSTouch) + "<br/>");
-print("Web Touchpoints: " + addCommas(webTouch) + "<br/>");
-print("Total Touchpoints: " + addCommas(total_touchpoints) + "<br/>");
-print("******************************<br/>");
+print("Total Registered Users: " + addCommas(total_users) + "<br />");
+print("New Users: " + addCommas(newUsers) + "<br />");
+print("Active Users: " + addCommas(activeUsers) + "<br />");
+print("Returning Users: " + addCommas(returningUsers) + "<br />");
+print("Total Artist to Fan Connections: " + addCommas(total_tiles_collected) + "<br />");
+print("Number of Users Connecting to an Artist: " + addCommas(user_count) + "<br />");
+print("Avg Number of Artist Connections / User: " + addCommas((total_tiles_collected/user_count).toFixed(2)) + "<br />");
+print("Total Likes: " + addCommas(likesCounter) + "<br />");
+print("Total Comments: " + addCommas(commentsCounter) + "<br />");
+print("******************************<br />");
+print("Touchpoints Count - if report is run before 12:00 counts are previous day.<br />");
+print("Android Touchpoints: " + addCommas(androidTouch) + "<br />");
+print("Desktop Touchpoints: " + addCommas(desktopTouch) + "<br />");
+print("iOS Touchpoints: " + addCommas(iOSTouch) + "<br />");
+print("Web Touchpoints: " + addCommas(webTouch) + "<br />");
+print("Total Touchpoints: " + addCommas(total_touchpoints) + "<br />");
+print("******************************<br />");
+print("New Users by Account Type.<br />");
+print("Facebook: " + addCommas(fbUsers) + "<br />");
+print("Email: " + addCommas(emailUsers) + "<br />");
+print("******************************<br />");
 
 // Start Soundboard Top 100 listing
 
