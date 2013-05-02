@@ -3,11 +3,11 @@
  * Updated by ME
  *
  * This js file is used in conjunction with a call to the mongo database
- * soundboard-staging.  This will run the following queries and produce
+ * soundboard-production.  This will run the following queries and produce
  * an output which is then emailed to users associated with the
  * dailyreports@songbirdnest.com distribution list.
  *
- * The job that calls this file is run from the jenkins instance on the carson.songbirdnest.com server.
+ * The job that calls this file is run from the jenkins instance on the jenkins.songbirdnest.com server.
  * The job is labeled soundboard-daily-report-process.
  *
  * if you have questions/comments about this file or the job that runs it please contatc
@@ -33,6 +33,7 @@
  * 03-07-13 - me - commented out the UGC and Email Poll portios of the report.
  * 03-14-13 - as & me - Andreas and I went through a major refactor of the searchStart and searchEnd date code and the Engagement numbers query.
  * 04-11-13 - me & as - Added the New Users by account type counts to report.
+ * 05-02-13 - me & as - Added the PharCyde daily touchpoint count to the report.
  */
 
 // Format Report Email Header
