@@ -156,6 +156,7 @@ var androidTouch = resultsJSON.results[0] ? resultsJSON.results[0].value.count :
 var desktopTouch = resultsJSON.results[1] ? resultsJSON.results[1].value.count : 0;
 var iOSTouch = resultsJSON.results[2] ? resultsJSON.results[2].value.count: 0;
 var webTouch = resultsJSON.results[3] ? resultsJSON.results[3].value.count : 0;
+var pharcydeTouch = resultsJSON.results[4] ? resultsJSON.results[4].value.count : 0;
 var total_touchpoints = androidTouch + desktopTouch + iOSTouch + webTouch;
 
 // Likes
@@ -193,6 +194,7 @@ print("Android Touchpoints: " + addCommas(androidTouch) + "<br />");
 print("Desktop Touchpoints: " + addCommas(desktopTouch) + "<br />");
 print("iOS Touchpoints: " + addCommas(iOSTouch) + "<br />");
 print("Web Touchpoints: " + addCommas(webTouch) + "<br />");
+print("BitTorrent Touchpoints: " + addCommas(pharcydeTouch) + "<br />");
 print("Total Touchpoints: " + addCommas(total_touchpoints) + "<br />");
 print("******************************<br />");
 print("New Users by Account Type.<br />");
