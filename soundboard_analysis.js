@@ -34,7 +34,7 @@
  * 03-14-13 - as & me - Andreas and I went through a major refactor of the searchStart and searchEnd date code and the Engagement numbers query.
  * 04-11-13 - me & as - Added the New Users by account type counts to report.
  * 05-02-13 - me & as - Added the PharCyde daily touchpoint count to the report.
- * 05-04-12 - me - Refactored Touchpoints logic to make it dynamic. Now when new touchpoints are added we should not have to update the report.
+ * 05-04-13 - me - Refactored Touchpoints logic to make it dynamic. Now when new touchpoints are added we should not have to update the report.
  */
 
 // Format Report Email Header
