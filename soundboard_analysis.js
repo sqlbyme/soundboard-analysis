@@ -34,6 +34,7 @@
  * 03-14-13 - as & me - Andreas and I went through a major refactor of the searchStart and searchEnd date code and the Engagement numbers query.
  * 04-11-13 - me & as - Added the New Users by account type counts to report.
  * 05-02-13 - me & as - Added the PharCyde daily touchpoint count to the report.
+ * 05-04-12 - me - Refactored Touchpoints logic to make it dynamic. Now when new touchpoints are added we should not have to update the report.
  */
 
 // Format Report Email Header
@@ -49,6 +50,13 @@ print("Soundboard Daily Stats<br/>" );
 print(new Date().toLocaleDateString() + " @ " + new Date().toLocaleTimeString() + "<br/>");
 print("******************************<br/>");
 
+// We use this function for some formatting on in the printed report.
+  function capitaliseFirstLetter(string)
+  {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+  }
+  
+  
 // This is the addCommas function - we use this function to make numbers larger than 1000 prettier to display.
  function addCommas(nStr) {
   nStr += '';
@@ -153,12 +161,22 @@ var total_users = db.users.find( { created_at: { $lte: searchEnd } } ).count();
 
 // Touchpoints
 var resultsJSON = db.user_touchpoints.mapReduce (touchpointMap, touchpointReduce, {out: { inline : 1}, query: { "touchpoints.0.created_at" : { $gte: searchStart, $lt: searchEnd } } } );
-var androidTouch = resultsJSON.results[0] ? resultsJSON.results[0].value.count : 0;
-var desktopTouch = resultsJSON.results[1] ? resultsJSON.results[1].value.count : 0;
-var iOSTouch = resultsJSON.results[2] ? resultsJSON.results[2].value.count: 0;
-var webTouch = resultsJSON.results[3] ? resultsJSON.results[3].value.count : 0;
-var pharcydeTouch = resultsJSON.results[4] ? resultsJSON.results[4].value.count : 0;
-var total_touchpoints = androidTouch + desktopTouch + iOSTouch + webTouch;
+
+// We use this function to parse out each touchpoint and display it in the report.
+function displayTouchpoints (resultSet) {
+   resultSet.results.forEach(function(entry) {
+      print(capitaliseFirstLetter(entry._id) + " Touchpoints: " + addCommas(entry.value.count) + "<br />");
+
+    });
+ }
+function caclulateTotalTouchpoints (resultSet) {
+  var i = 0;
+  resultSet.results.forEach(function(entry) {
+    i += entry.value.count;
+  });
+  return i;
+}
+var total_touchpoints = caclulateTotalTouchpoints(resultsJSON);
 
 // Likes
 var likesJSON = db.artist_updates.mapReduce( likesMap, likesReduce, { out: { inline: 1 }, query: { like_count: { $gte: 1 } } } );
@@ -191,11 +209,7 @@ print("Total Likes: " + addCommas(likesCounter) + "<br />");
 print("Total Comments: " + addCommas(commentsCounter) + "<br />");
 print("******************************<br />");
 print("Touchpoints Count - if report is run before 12:00 counts are previous day.<br />");
-print("Android Touchpoints: " + addCommas(androidTouch) + "<br />");
-print("Desktop Touchpoints: " + addCommas(desktopTouch) + "<br />");
-print("iOS Touchpoints: " + addCommas(iOSTouch) + "<br />");
-print("Web Touchpoints: " + addCommas(webTouch) + "<br />");
-print("BitTorrent Touchpoints: " + addCommas(pharcydeTouch) + "<br />");
+displayTouchpoints(resultsJSON);
 print("Total Touchpoints: " + addCommas(total_touchpoints) + "<br />");
 print("******************************<br />");
 print("New Users by Account Type.<br />");
