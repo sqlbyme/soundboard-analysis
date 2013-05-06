@@ -35,6 +35,9 @@
  * 04-11-13 - me & as - Added the New Users by account type counts to report.
  * 05-02-13 - me & as - Added the PharCyde daily touchpoint count to the report.
  * 05-04-13 - me - Refactored Touchpoints logic to make it dynamic. Now when new touchpoints are added we should not have to update the report.
+ * 05-06-13 - me - Refactored some of the var logic and added a master list of touchpoints.  If a new touchpoint is detected it will display as a 0
+ *                 count the first time until it is added to the master listing.  This allows us to report a zero count when a touchpoint does not
+ *                 appear in a subsequent daily report.
  */
 
 // Format Report Email Header
@@ -75,9 +78,8 @@ print("******************************<br/>");
 // This section of code is where we determine how many artists a user is following.
 // These vars also help us determine a bit of engandement becuase we can see how many users are active vs
 // how many just sing up and never follow an artist (which is hard to do since we auto-follow now).
-var total_tiles_collected = db.user_tiles.find().count();
-
-var user_count = db.user_tiles.distinct("user_id").length;
+var total_tiles_collected = db.user_tiles.find().count(),
+    user_count = db.user_tiles.distinct("user_id").length;
 // end section
 
 
@@ -99,8 +101,8 @@ function addLeadingZero(input) {
 }
 
 // Set the start and end dates to search between
-var searchStart = new Date(ISODate() - 86000000);
-var searchEnd = new Date(ISODate());
+var searchStart = new Date(ISODate() - 86000000),
+    searchEnd = new Date(ISODate());
 searchStart.setHours(0, 7, 0, 0);
 searchEnd.setHours(0, 6, 59, 999);
 
@@ -153,8 +155,8 @@ function getName(aid) {
 
 // Set the vars to prep them for output.
 // Artist Count
-var artistCount = db.artists.find( { disabled: { $ne: true } } ).count();
-var diasbledArtistCount = db.artists.find( { disabled: true } ).count();
+var artistCount = db.artists.find( { disabled: { $ne: true } } ).count(),
+    diasbledArtistCount = db.artists.find( { disabled: true } ).count();
 
 // User count
 var total_users = db.users.find( { created_at: { $lte: searchEnd } } ).count();
@@ -162,13 +164,23 @@ var total_users = db.users.find( { created_at: { $lte: searchEnd } } ).count();
 // Touchpoints
 var resultsJSON = db.user_touchpoints.mapReduce (touchpointMap, touchpointReduce, {out: { inline : 1}, query: { "touchpoints.0.created_at" : { $gte: searchStart, $lt: searchEnd } } } );
 
+var all = ["android","bittorrent","desktop","ios","web"],
+	  current = [],
+		missing = [];
+
 // We use this function to parse out each touchpoint and display it in the report.
 function displayTouchpoints (resultSet) {
    resultSet.results.forEach(function(entry) {
-      print(capitaliseFirstLetter(entry._id) + " Touchpoints: " + addCommas(entry.value.count) + "<br />");
-
-    });
- }
+     print(capitaliseFirstLetter(entry._id) + " Touchpoints: " + addCommas(entry.value.count) + "<br />");
+     current.push(entry._id);
+	  });
+	  all.forEach(function(entry) {
+	     if (current.indexOf(entry) === -1) { missing.push(entry); }
+	   });
+		missing.forEach(function(entry) {
+			print(capitaliseFirstLetter(entry) + " Touchpoints: 0<br />");
+		});
+}
 function caclulateTotalTouchpoints (resultSet) {
   var i = 0;
   resultSet.results.forEach(function(entry) {
@@ -179,23 +191,23 @@ function caclulateTotalTouchpoints (resultSet) {
 var total_touchpoints = caclulateTotalTouchpoints(resultsJSON);
 
 // Likes
-var likesJSON = db.artist_updates.mapReduce( likesMap, likesReduce, { out: { inline: 1 }, query: { like_count: { $gte: 1 } } } );
-var likesCounter = 0;
+var likesJSON = db.artist_updates.mapReduce( likesMap, likesReduce, { out: { inline: 1 }, query: { like_count: { $gte: 1 } } } ),
+    likesCounter = 0;
   likesJSON.results.forEach( function(cell) { likesCounter += cell.value.count; });
 
 // Comments
-var commentsJSON = db.artist_updates.mapReduce( commentsMap, commentsReduce, { out: { inline: 1 }, query: { comment_count: { $gte: 1 } } } );
-var commentsCounter = 0;
-    commentsJSON.results.forEach( function(cell) { commentsCounter += cell.value.count; });
+var commentsJSON = db.artist_updates.mapReduce( commentsMap, commentsReduce, { out: { inline: 1 }, query: { comment_count: { $gte: 1 } } } ),
+    commentsCounter = 0;
+  commentsJSON.results.forEach( function(cell) { commentsCounter += cell.value.count; });
 
 // Engadgement
-var newUsers = db.users.find( { created_at: { $gte: searchStart, $lte: searchEnd } } ).count();
-var returningUsers = db.users.find( { afa: { $gte: searchStart, $lte: searchEnd }, created_at: { $lt: searchStart } } ).count();
-var activeUsers = newUsers + returningUsers;
+var newUsers = db.users.find( { created_at: { $gte: searchStart, $lte: searchEnd } } ).count(),
+    returningUsers = db.users.find( { afa: { $gte: searchStart, $lte: searchEnd }, created_at: { $lt: searchStart } } ).count(),
+    activeUsers = newUsers + returningUsers;
 
 // User count by auth type
-var emailUsers = db.users.find({"accounts._id": null, created_at: { $gte: searchStart, $lte: searchEnd}}).count();
-var fbUsers = newUsers - emailUsers;
+var emailUsers = db.users.find({"accounts._id": null, created_at: { $gte: searchStart, $lte: searchEnd}}).count(),
+    fbUsers = newUsers - emailUsers;
 
 // Output results to the display or an email
 print("Total Registered Users: " + addCommas(total_users) + "<br />");
