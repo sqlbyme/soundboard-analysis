@@ -208,7 +208,7 @@ var newUsers = db.users.find( { created_at: { $gte: searchStart, $lte: searchEnd
 // User count by auth type
 var emailUsers = db.users.find({"accounts._id": null, created_at: { $gte: searchStart, $lte: searchEnd}}).count(),
     fbUsers = newUsers - emailUsers,
-    gmailUsers = db.users.find({'accounts.provider' : 'gplus', created_at: { $gte: searchStart, $lte: searchEnd}}).count()
+    gmailUsers = db.users.find({'accounts.provider' : 'gplus', created_at: { $gte: searchStart, $lte: searchEnd}}).count();
 
 // Output results to the display or an email
 print("Total Registered Users: " + addCommas(total_users) + "<br />");
