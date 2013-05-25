@@ -207,7 +207,8 @@ var newUsers = db.users.find( { created_at: { $gte: searchStart, $lte: searchEnd
 
 // User count by auth type
 var emailUsers = db.users.find({"accounts._id": null, created_at: { $gte: searchStart, $lte: searchEnd}}).count(),
-    fbUsers = newUsers - emailUsers;
+    fbUsers = newUsers - emailUsers,
+    gmailUsers = db.users.find({'accounts.provider' : 'gplus', created_at: { $gte: searchStart, $lte: searchEnd}}).count()
 
 // Output results to the display or an email
 print("Total Registered Users: " + addCommas(total_users) + "<br />");
@@ -227,6 +228,7 @@ print("******************************<br />");
 print("New Users by Account Type.<br />");
 print("Facebook: " + addCommas(fbUsers) + "<br />");
 print("Email: " + addCommas(emailUsers) + "<br />");
+print("Gmail: " + addCommas(gmailUsers) + "<br />");
 print("******************************<br />");
 
 // Start Soundboard Top 100 listing
