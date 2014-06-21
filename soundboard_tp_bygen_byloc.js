@@ -1,6 +1,6 @@
 /*
  * Created by ME & AS
- * 
+ *
  *
  * This js file is used in conjunction with a call to the mongo database
  * soundboard-production.  This will run the following queries and produce
@@ -41,8 +41,8 @@ print("******************************<br/>");
   {
     return string.charAt(0).toUpperCase() + string.slice(1);
   }
-  
-  
+
+
 // This is the addCommas function - we use this function to make numbers larger than 1000 prettier to display.
  function addCommas(nStr) {
   nStr += '';
@@ -59,19 +59,19 @@ print("******************************<br/>");
 // This function adds a leading zero to an int value
 // we use this to add a leading zero to the month or date vars because the ISODate()
 // function expects the month and date args to be two digit
-function addLeadingZero(input) {
-  var outputString = "";
-  if (input.toString().length < 2)
-  {
-    outputString = "0" + input.toString();
-  }
-  else
-  {
-    outputString = input.toString();
-  }
+  function addLeadingZero(input) {
+    var outputString = "";
+    if (input.toString().length < 2)
+    {
+      outputString = "0" + input.toString();
+    }
+    else
+    {
+      outputString = input.toString();
+    }
 
-  return outputString;
-}
+    return outputString;
+  }
 
 // Set the start and end dates to search between
 var searchStart = new Date(ISODate() - 86000000);
@@ -91,7 +91,7 @@ function queryTouchpoints(touchpointList) {
     var UIDs = db.user_touchpoints.find( { "touchpoints.0.created_at" : { $gte: searchStart, $lt: searchEnd }, "touchpoints.0.touchpoint" : entry } );
     var uidArray = [];
     UIDs.forEach(function(entry){ uidArray.push(entry.user_id)  });
-    
+
     // Setup the map / reduce for the Touchpoints
     function locationMap () {
       emit ( this.location, { count: 1 });
@@ -104,11 +104,11 @@ function queryTouchpoints(touchpointList) {
         total += values[i].count;
       return { count : total };
     }
-    
+
     // Touchpoints
     var locationJSONMale = db.users.mapReduce( locationMap, locationReduce, {out: {inline: 1 }, query: { _id: { $in: uidArray }, location: { $exists: true }, gender: "male" } } );
     var locationJSONFemale = db.users.mapReduce( locationMap, locationReduce, {out: {inline: 1 }, query: { _id: { $in: uidArray }, location: { $exists: true }, gender: "female" } } );
-    
+
     // We use this function to parse out each touchpoint and display it in the report.
     function displayLocationValues (resultSet) {
        resultSet.results.forEach(function(entry) {
@@ -117,7 +117,7 @@ function queryTouchpoints(touchpointList) {
 
         });
      }
-    
+
     print("<tr><td>" + entry + "</td><td></td><td></td><td></td></tr>");
     print("<tr><td></td><td>Female</td><td></td><td></td></tr>");
     displayLocationValues(locationJSONFemale);

@@ -1,5 +1,5 @@
 /*
- * Updated by ME
+ * Created by ME
  *
  * This js file is used in conjunction with a call to the mongo database
  * soundboard-production.  This will run the following queries and produce
@@ -12,7 +12,7 @@
  * if you have questions/comments about this file or the job that runs it please contatc
  * mike@songbirdnest.com.
  *
- * if mike does not work here anymore and this job is still running and being used on a daily 
+ * if mike does not work here anymore and this job is still running and being used on a daily
  * basis...trust me, you've got much bigger problems than dealing with this file.  Good luck! :)
  *
  */
@@ -35,17 +35,17 @@ IsAM(new Date()) ? print("Songbird 7 Daily Stats" ) : print("Songbird 7 Daily St
 print(new Date().toLocaleDateString() + " @ " + new Date().toLocaleTimeString());
 print("******************************");
 
-// This is the addCommas function - we use this function to make numbers larger than 1000 prettier to display.
+// This is the addCommas function - we use this function to make numbers larger than 1000 nicer to display.
  function addCommas(nStr) {
-	nStr += '';
-	x = nStr.split('.');
-	x1 = x[0];
-	x2 = x.length > 1 ? '.' + x[1] : '';
-	var rgx = /(\d+)(\d{3})/;
-	while (rgx.test(x1)) {
-		x1 = x1.replace(rgx, '$1' + ',' + '$2');
-	}
-	return x1 + x2;
+  nStr += '';
+  x = nStr.split('.');
+  x1 = x[0];
+  x2 = x.length > 1 ? '.' + x[1] : '';
+  var rgx = /(\d+)(\d{3})/;
+  while (rgx.test(x1)) {
+    x1 = x1.replace(rgx, '$1' + ',' + '$2');
+  }
+  return x1 + x2;
  };
 
 // This is the array of artists in the SB7 program.
@@ -57,7 +57,7 @@ print("******************************");
                  ObjectId("4f976138491b840001000289"),
                  ObjectId("5010313f0b9f030002000d52") ];
 
-// These vars set the current year and month and then set the date based upon 
+// These vars set the current year and month and then set the date based upon
 // whether or not it is before noon. Could probably remove the IsAM check
 // based on the fact that we no longer run the report twice a day.
 var year = new Date().getFullYear().toString();
@@ -78,7 +78,7 @@ function addLeadingZero(input) {
   {
     outputString = input.toString();
   }
-  
+
   return outputString;
 }
 
@@ -102,7 +102,7 @@ var searchEnd = setEndDate(year, month, yesterday);
 
 // Setup the map / reduce for Likes
 function likesMap () {
-	emit ( this.artist_id, { count: this.like_count });
+  emit ( this.artist_id, { count: this.like_count });
 }
 
 function likesReduce (key, values) {
@@ -110,7 +110,7 @@ function likesReduce (key, values) {
   for ( var i=0; i<values.length; i++ )
     total += values[i].count;
   return { count: total };
-  
+
 }
 
 // Setup the map / reduce for UGC
@@ -122,7 +122,7 @@ function ugcReduce (key, values) {
   var total = 0;
   for ( var i=0; i<values.length; i++ )
     total += values[i].count;
-  return { count: total };  
+  return { count: total };
 }
 // End function def
 

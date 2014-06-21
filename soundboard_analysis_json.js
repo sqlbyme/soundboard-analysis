@@ -1,6 +1,6 @@
 /*
- * Created by PD
- * Updated by ME
+ * Created by ME
+ *
  *
  * This js file is used in conjunction with a call to the mongo database
  * soundboard-staging.  This will run the following queries and produce
@@ -13,7 +13,7 @@
  * if you have questions/comments about this file or the job that runs it please contatc
  * mike@songbirdnest.com.
  *
- * if mike does not work here anymore and this job is still running and being used on a daily 
+ * if mike does not work here anymore and this job is still running and being used on a daily
  * basis...trust me, you've got much bigger problems than dealing with this file.  Good luck!
  *
  */
@@ -43,15 +43,15 @@ jsonOut.Report = { "Title" : tbHeader, "Timestamp" : tbDateTime };
 // This is the addCommas function
  function addCommas(nStr)
  {
-	nStr += '';
-	x = nStr.split('.');
-	x1 = x[0];
-	x2 = x.length > 1 ? '.' + x[1] : '';
-	var rgx = /(\d+)(\d{3})/;
-	while (rgx.test(x1)) {
-		x1 = x1.replace(rgx, '$1' + ',' + '$2');
-	}
-	return x1 + x2;
+  nStr += '';
+  x = nStr.split('.');
+  x1 = x[0];
+  x2 = x.length > 1 ? '.' + x[1] : '';
+  var rgx = /(\d+)(\d{3})/;
+  while (rgx.test(x1)) {
+    x1 = x1.replace(rgx, '$1' + ',' + '$2');
+  }
+  return x1 + x2;
  };
 
 
